@@ -1,129 +1,98 @@
-export const LESSONS_CONTENT = {
-  1: {
-    titulo_secao: "O Poder da Diferença: Teste T de Student",
-    conteudo: [
+export const TRILHAS_CONTENT = {
+  'trilha-multiplos-grupos': {
+    titulo: "Comparação de Múltiplos Grupos",
+    fases: [
       {
-        tipo: "texto",
-        valor: "Imagine que você quer saber se o gênero do estudante afeta a nota média na Redação do ENEM. Não basta olhar para as médias simples de homens e mulheres e dizer 'uma é maior'. Precisamos saber se essa diferença é estatisticamente real."
+        id: 1,
+        titulo: "Fase 1: Exploração Visual",
+        conteudo: [
+          { tipo: "texto", valor: "Antes de aplicar qualquer teste, o BOXPLOT é seu melhor amigo. Ele mostra a mediana, os quartis e os 'outliers' (pontos fora da curva) de cada tipo de escola ou faixa de renda." },
+          { tipo: "dica", valor: "💡 Olhe para a linha central da caixa (mediana). Se as linhas de diferentes grupos não estão alinhadas, há uma forte chance de que os grupos sejam desiguais." }
+        ]
       },
       {
-        tipo: "hipoteses",
-        h0: "Não há diferença real entre as médias (a diferença é fruto do acaso).",
-        h1: "Há uma diferença estatisticamente significativa entre os grupos."
+        id: 2,
+        titulo: "Fase 2: Testes de Normalidade (O Tamanho Importa!)",
+        conteudo: [
+          { tipo: "texto", valor: "Para saber se os dados seguem a 'Curva de Sino', escolhemos o teste baseado no tamanho da sua amostra (N):" },
+          { tipo: "conceito", titulo: "Amostras Pequenas (N < 5000)", valor: "Use o Teste de Shapiro-Wilk. Ele é muito sensível e preciso para poucos dados." },
+          { tipo: "conceito", titulo: "Amostras Grandes (N ≥ 5000)", valor: "Use o Teste de Kolmogorov-Smirnov (K-S). Como o ENEM tem milhões de dados, este será seu teste padrão na maioria das vezes!" },
+          { tipo: "alerta", valor: "🚨 REGRA: Se o P-valor desses testes for menor que 0.05, seus dados NÃO são normais. Isso te obriga a mudar de rota!" }
+        ]
       },
       {
-        tipo: "conceito",
-        titulo: "O que é o P-Valor?",
-        valor: "É a probabilidade de estarmos errados ao dizer que os grupos são diferentes. Se p < 0.05, aceitamos a H1 (Diferença real)."
+        id: 3,
+        titulo: "Fase 3: A Bifurcação de Decisão",
+        conteudo: [
+          { tipo: "texto", valor: "Agora você decide qual 'motor' estatístico vai usar. Existem dois caminhos:" },
+          { 
+            tipo: "hipoteses", 
+            h0: "ROTA A (ANOVA): Use se os dados forem NORMAIS e as variâncias iguais. É o teste mais potente.", 
+            h1: "ROTA B (Kruskal-Wallis): Use se a normalidade FALHAR. É o teste mais seguro e robusto." 
+          },
+          { tipo: "texto", valor: "Ambos testam a mesma coisa: 'Os grupos são diferentes?'. Mas a ANOVA olha para as Médias, enquanto o Kruskal-Wallis olha para os Rankings." }
+        ]
       },
       {
-        tipo: "alerta",
-        valor: "🔍 ANTES DE TESTAR: Seus dados devem ser 'Normais'. Use o Teste de Shapiro-Wilk no Canvas para verificar se o histograma parece um sino."
+        id: 4,
+        titulo: "Fase 4: Rota A - ANOVA (Paramétrica)",
+        conteudo: [
+          { tipo: "texto", valor: "A ANOVA (Análise de Variância) compara se a variação entre os grupos é maior do que a variação 'bagunçada' dentro de cada grupo." },
+          { tipo: "formula", valor: "F = \\frac{\\text{Variância Entre Grupos}}{\\text{Variância Dentro dos Grupos}}", legenda: "Se F for alto e P < 0.05, pelo menos um grupo tem média diferente." },
+          { tipo: "conceito", titulo: "Post-Hoc de Tukey", valor: "Se a ANOVA der positivo, usamos o Teste de Tukey para comparar os pares (ex: Pública vs Privada) e ver quem é o destaque." }
+        ]
       },
       {
-        tipo: "conceito",
-        titulo: "Tamanho do Efeito (Cohen's d)",
-        valor: "O p-valor diz 'SE' há diferença. O Tamanho do Efeito diz 'O QUANTO' essa diferença é importante na vida real. Um efeito de 0.2 é pequeno; 0.8 é grande!"
+        id: 5,
+        titulo: "Fase 5: Rota B - Kruskal-Wallis (Não-Paramétrica)",
+        conteudo: [
+          { tipo: "texto", valor: "Quando os dados do ENEM estão 'tortos' (muitos zeros ou notas mil), a média engana. O Kruskal-Wallis ignora os valores brutos e foca na ordem das notas." },
+          { tipo: "conceito", titulo: "Ranking (Postos)", valor: "Imagine colocar todos os alunos em uma fila única. O teste vê se os alunos de escola 'Federal' estão acumulados no fim da fila (notas altas)." },
+          { tipo: "conceito", titulo: "Post-Hoc de Dunn", valor: "É o par do Kruskal-Wallis. Usamos o Teste de Dunn para descobrir quais grupos de renda são realmente diferentes entre si." }
+        ]
       },
       {
-        tipo: "missao",
-        valor: "Sua missão: Comparar médias de Redação entre gêneros (Masculino vs Feminino)."
+        id: 6,
+        titulo: "Fase 6: Tamanho do Efeito (Magnitude)",
+        conteudo: [
+          { tipo: "texto", valor: "Não basta ser diferente, tem que ser RELEVANTE. O p-valor não diz o tamanho da desigualdade." },
+          { tipo: "conceito", titulo: "Eta Quadrado (η²)", valor: "Para ANOVA. Diz quantos % da nota é explicada pelo grupo (ex: 'O tipo de escola explica 20% da nota do aluno')." },
+          { tipo: "conceito", titulo: "Epsilon Quadrado (ε²)", valor: "A medida equivalente para o Kruskal-Wallis." }
+        ]
+      },
+      {
+        id: 7,
+        titulo: "Fase 7: Missão Final no Canvas",
+        conteudo: [
+          { tipo: "missao", valor: "Sua jornada completa: \n1. Carregar Microdados \n2. Boxplot \n3. K-S ou Shapiro (conforme o N) \n4. Se p > 0.05 -> ANOVA + Tukey \n5. Se p < 0.05 -> Kruskal-Wallis + Dunn \n6. Calcular η² ou ε²." }
+        ]
       }
     ]
   },
-  2: {
-    titulo_secao: "Análise sem Distribuição: Mann-Whitney",
-    conteudo: [
+  'trilha-dois-grupos': {
+    titulo: "Comparação de Dois Grupos",
+    fases: [
       {
-        tipo: "texto",
-        valor: "Quando os dados não seguem uma curva normal (estão muito 'tortos'), o Teste T não funciona bem. É aqui que entra o Mann-Whitney."
+        id: 1,
+        titulo: "Fase 1: Contexto e Hipótese",
+        conteudo: [
+          { tipo: "texto", valor: "Queremos saber se alunos de diferentes gêneros ou estados têm desempenhos diferentes em uma única prova." },
+          { tipo: "hipoteses", h0: "Não há diferença entre os dois grupos.", h1: "Existe uma diferença significativa." }
+        ]
       },
       {
-        tipo: "conceito",
-        titulo: "Por que usar testes não-paramétricos?",
-        valor: "Diferente do Teste T, o Mann-Whitney não olha para a média bruta, mas para o 'ranking' (quem tirou a maior nota, a segunda maior, etc). Isso protege sua análise contra valores extremos (outliers)."
+        id: 2,
+        titulo: "Fase 2: Escolha do Teste",
+        conteudo: [
+          { tipo: "conceito", titulo: "Teste T vs Mann-Whitney", valor: "Se os dados forem normais, use Teste T (Paramétrico). Se houver muitos valores extremos (outliers), use Mann-Whitney (Não-Paramétrico)." }
+        ]
       },
       {
-        tipo: "dica",
-        valor: "💡 Use este teste quando o seu Histograma mostrar notas muito concentradas em um extremo (muitos zeros ou muitos mil)."
-      }
-    ]
-  },
-  3: {
-    titulo_secao: "Comparando Três ou Mais Mundos: ANOVA",
-    conteudo: [
-      {
-        tipo: "texto",
-        valor: "E se quisermos comparar o desempenho de alunos de 3 tipos de escola: Pública, Privada e Federal? Se fizermos vários Testes T (Pública vs Privada, Privada vs Federal...), aumentamos a chance de erro. A ANOVA resolve isso de uma vez."
-      },
-      {
-        tipo: "hipoteses",
-        h0: "Todas as médias são iguais entre os tipos de escola.",
-        h1: "Pelo menos um tipo de escola tem uma média diferente dos outros."
-      },
-      {
-        tipo: "conceito",
-        titulo: "O que é Post-Hoc (Tukey)?",
-        valor: "Se a ANOVA der p < 0.05, ela diz: 'Alguém é diferente'. O Teste Post-Hoc de Tukey é como um VAR no futebol: ele analisa dupla por dupla para nos dizer EXATAMENTE quem é o diferente."
-      },
-      {
-        tipo: "alerta",
-        valor: "📊 Tamanho do Efeito: Na ANOVA, usamos o 'Eta Quadrado' (η²) para medir a força dessa diferença."
-      }
-    ]
-  },
-  4: {
-    titulo_secao: "Relações Categóricas: Qui-Quadrado",
-    conteudo: [
-      {
-        tipo: "texto",
-        valor: "Aqui não comparamos médias, mas frequências (contagens). Por exemplo: 'A escolha da língua estrangeira (Inglês ou Espanhol) depende do tipo de escola?'"
-      },
-      {
-        tipo: "conceito",
-        titulo: "Tabelas de Contingência",
-        valor: "O Qui-Quadrado compara o que 'observamos' na realidade com o que seria 'esperado' se não houvesse relação nenhuma entre as variáveis."
-      },
-      {
-        tipo: "hipoteses",
-        h0: "As variáveis são independentes (não há relação).",
-        h1: "As variáveis estão associadas (há uma relação)."
-      }
-    ]
-  },
-  5: {
-    titulo_secao: "Força de Associação: Correlação",
-    conteudo: [
-      {
-        tipo: "texto",
-        valor: "Quanto mais um aluno tira em Matemática, mais ele tira em Ciências da Natureza? A correlação mede essa 'sintonia' entre as notas."
-      },
-      {
-        tipo: "conceito",
-        titulo: "O Coeficiente 'r' de Pearson",
-        valor: "Varia de -1 a 1. \n- Próximo de 1: Quando uma nota sobe, a outra sobe também. \n- Próximo de -1: Quando uma sobe, a outra desce. \n- Zero: Não há relação."
-      },
-      {
-        tipo: "dica",
-        valor: "⚡ CUIDADO: Correlação não é causalidade! Duas notas podem estar correlacionadas, mas isso não significa que uma 'causou' a outra."
-      }
-    ]
-  },
-  6: {
-    titulo_secao: "Desafio Integrador: O Peso da Renda",
-    conteudo: [
-      {
-        tipo: "texto",
-        valor: "Agora você vai usar o Kruskal-Wallis para analisar a Renda Familiar. Como a renda é dividida em muitas classes (A, B, C...) e as notas raramente são normais, este é o teste perfeito."
-      },
-      {
-        tipo: "conceito",
-        titulo: "Post-Hoc de Dunn",
-        valor: "Como o Kruskal-Wallis é não-paramétrico, o Post-Hoc usado é o de Dunn. Ele vai te mostrar se a diferença real está entre a Classe A e a Classe E, ou se a Classe B e C são parecidas."
-      },
-      {
-        tipo: "missao",
-        valor: "Monte o fluxo: Dados ENEM -> Teste de Normalidade -> Kruskal-Wallis -> Post-Hoc de Dunn -> Heatmap de Diferenças."
+        id: 3,
+        titulo: "Fase 3: Execução no Laboratório",
+        conteudo: [
+          { tipo: "missao", valor: "Sua missão: Comparar a nota de Redação entre Homens e Mulheres.\n1. Carregue os Microdados\n2. Verifique a Normalidade\n3. Escolha entre Teste T ou Mann-Whitney\n4. Interprete o P-Valor." }
+        ]
       }
     ]
   }
