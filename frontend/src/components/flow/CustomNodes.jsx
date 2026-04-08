@@ -24,3 +24,49 @@ export const EndNode = ({ data }) => {
     </div>
   );
 };
+
+export const ToolNode = ({ data }) => {
+  return (
+    <div style={{ 
+      padding: '12px 20px', 
+      background: 'white', 
+      border: `2px solid ${data.color || '#6366f1'}`, 
+      borderRadius: '10px', 
+      display: 'flex', 
+      flexDirection: 'column',
+      gap: '8px', 
+      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+      minWidth: '150px'
+    }}>
+      <Handle type="target" position={Position.Top} style={{ background: '#333' }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ fontSize: '20px' }}>{data.icon || '⚙️'}</div>
+        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#1e293b' }}>{data.label}</div>
+      </div>
+      
+      {data.onConfig && (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            data.onConfig();
+          }}
+          style={{ 
+            marginTop: '5px',
+            padding: '4px 8px', 
+            background: '#f1f5f9', 
+            border: '1px solid #e2e8f0', 
+            borderRadius: '4px', 
+            fontSize: '10px', 
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            color: '#475569'
+          }}
+        >
+          ⚙️ Configurar / Ver
+        </button>
+      )}
+      
+      <Handle type="source" position={Position.Bottom} style={{ background: '#333' }} />
+    </div>
+  );
+};

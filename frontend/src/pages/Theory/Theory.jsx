@@ -1,21 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { TRILHAS_MODULO_2 } from '../../constants/data';
+import { TRILHAS_MODULO_1, TRILHAS_MODULO_2 } from '../../constants/data';
 import { TRILHAS_CONTENT } from '../../constants/lessonsContent';
 import 'katex/dist/katex.min.css';
 import { BlockMath } from 'react-katex';
 
 const Theory = ({ licaoId, voltarAoDashboard, irParaCanvas }) => {
   const [faseAtualIdx, setFaseAtualIdx] = useState(0);
-  const trilha = TRILHAS_MODULO_2.find(t => t.id === licaoId);
+  const trilha = TRILHAS_MODULO_2.find(t => t.id === licaoId) || TRILHAS_MODULO_1.find(t => t.id === licaoId);
   const conteudoDidatico = TRILHAS_CONTENT[licaoId];
 
   useEffect(() => {
-    setFaseAtualIdx(0);
+    // Carregar progresso salvo
+    const progressoSalvo = localStorage.getItem(`progresso-${licaoId}`);
+    if (progressoSalvo) {
+      setFaseAtualIdx(parseInt(progressoSalvo, 10));
+    } else {
+      setFaseAtualIdx(0);
+    }
   }, [licaoId]);
 
   const proximaFase = () => {
     if (conteudoDidatico && faseAtualIdx < conteudoDidatico.fases.length - 1) {
-      setFaseAtualIdx(faseAtualIdx + 1);
+      const novoIdx = faseAtualIdx + 1;
+      setFaseAtualIdx(novoIdx);
+      // Salvar progresso
+      localStorage.setItem(`progresso-${licaoId}`, novoIdx.toString());
       window.scrollTo(0, 0);
     } else {
       irParaCanvas(licaoId);
@@ -65,8 +74,19 @@ const Theory = ({ licaoId, voltarAoDashboard, irParaCanvas }) => {
     }
   };
 
-  const totalFases = conteudoDidatico ? conteudoDidatico.fases.length : 0;
-  const faseAtual = conteudoDidatico ? conteudoDidatico.fases[faseAtualIdx] : null;
+  const totalFases = conteudoDidatico ? (conteudoDidatico.fases?.length || 0) : 0;
+  const faseAtual = (conteudoDidatico && conteudoDidatico.fases) ? conteudoDidatico.fases[faseAtualIdx] : null;
+
+  // Se a lição existe mas as fases não, ou se houve erro no carregamento
+  if (licaoId && !trilha) {
+    return (
+      <div style={{ padding: '50px', textAlign: 'center', fontFamily: 'system-ui' }}>
+        <h2>⚠️ Erro de Carregamento</h2>
+        <p>A lição "{licaoId}" não foi encontrada no mapeamento de dados.</p>
+        <button onClick={voltarAoDashboard} style={{ background: '#6366f1', color: 'white', border: 'none', padding: '12px 25px', borderRadius: '8px', cursor: 'pointer' }}>Voltar ao Dashboard</button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: '#f1f5f9', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
@@ -76,7 +96,7 @@ const Theory = ({ licaoId, voltarAoDashboard, irParaCanvas }) => {
         <div style={{ color: '#64748b', fontWeight: 'bold' }}>{conteudoDidatico ? `Fase ${faseAtualIdx + 1} de ${totalFases}` : 'Em breve'}</div>
       </nav>
 
-      {conteudoDidatico && (
+      {conteudoDidatico && totalFases > 0 && (
         <div style={{ width: '100%', height: '6px', background: '#e2e8f0' }}>
           <div style={{ width: `${((faseAtualIdx + 1) / totalFases) * 100}%`, height: '100%', background: '#6366f1', transition: 'width 0.3s' }}></div>
         </div>
@@ -84,7 +104,7 @@ const Theory = ({ licaoId, voltarAoDashboard, irParaCanvas }) => {
 
       <div style={{ display: 'flex', maxWidth: '1200px', margin: '40px auto', gap: '30px', padding: '0 20px' }}>
         <div style={{ flex: 1, background: 'white', padding: '50px', borderRadius: '16px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
-          {conteudoDidatico ? (
+          {conteudoDidatico && faseAtual ? (
             <>
               <header style={{ marginBottom: '40px' }}>
                 <h1 style={{ color: '#0f172a', fontSize: '36px', margin: 0 }}>{faseAtual.titulo}</h1>
@@ -98,21 +118,21 @@ const Theory = ({ licaoId, voltarAoDashboard, irParaCanvas }) => {
           ) : (
             <div style={{ textAlign: 'center', padding: '100px 0' }}>
               <h2 style={{ color: '#1e293b' }}>📖 Conteúdo em Preparação</h2>
-              <p style={{ color: '#64748b' }}>Estamos organizando as fases desta investigação pedagógica. Por favor, selecione outra trilha.</p>
+              <p style={{ color: '#64748b' }}>Estamos organizando as fases desta investigação pedagógica para a trilha <strong>{licaoId}</strong>.</p>
               <button onClick={voltarAoDashboard} style={{ background: '#6366f1', color: 'white', border: 'none', padding: '12px 25px', borderRadius: '8px', cursor: 'pointer', marginTop: '20px', fontWeight: 'bold' }}>Voltar ao Dashboard</button>
             </div>
           )}
         </div>
 
-        {conteudoDidatico && (
+        {conteudoDidatico && totalFases > 0 && (
           <aside style={{ width: '300px' }}>
             <div style={{ background: '#1e293b', color: 'white', padding: '25px', borderRadius: '16px', position: 'sticky', top: '100px' }}>
-              <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', color: '#38bdf8' }}>Pipeline Inferencial</h3>
+              <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', color: '#38bdf8' }}>Fluxo de Aprendizado</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 {conteudoDidatico.fases.map((f, i) => (
                   <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: i <= faseAtualIdx ? 1 : 0.4 }}>
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: i === faseAtualIdx ? '#6366f1' : (i < faseAtualIdx ? '#10b981' : '#334155'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'white' }}>{i < faseAtualIdx ? '✓' : i + 1}</div>
-                    <span style={{ fontSize: '13px', fontWeight: i === faseAtualIdx ? 'bold' : 'normal', color: i === faseAtualIdx ? 'white' : '#cbd5e1' }}>{f.titulo.split(':')[1]}</span>
+                    <span style={{ fontSize: '13px', fontWeight: i === faseAtualIdx ? 'bold' : 'normal', color: i === faseAtualIdx ? 'white' : '#cbd5e1' }}>{f.titulo.split(':')[1] || f.titulo}</span>
                   </div>
                 ))}
               </div>
@@ -124,5 +144,6 @@ const Theory = ({ licaoId, voltarAoDashboard, irParaCanvas }) => {
     </div>
   );
 };
+
 
 export default Theory;

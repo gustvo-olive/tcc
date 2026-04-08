@@ -64,9 +64,10 @@ export const TRILHAS_CONTENT = {
         id: 7,
         titulo: "Fase 7: Missão Final no Canvas",
         conteudo: [
-          { tipo: "missao", valor: "Sua jornada completa: \n1. Carregar Microdados \n2. Boxplot \n3. K-S ou Shapiro (conforme o N) \n4. Se p > 0.05 -> ANOVA + Tukey \n5. Se p < 0.05 -> Kruskal-Wallis + Dunn \n6. Calcular η² ou ε²." }
+          { tipo: "missao", valor: "DESAFIO: O nível de renda impacta o desempenho dos alunos no ENEM 2023?" }
         ]
       }
+
     ]
   },
   'trilha-dois-grupos': {
@@ -95,5 +96,90 @@ export const TRILHAS_CONTENT = {
         ]
       }
     ]
+  },
+  'trilha-associacao': {
+    titulo: "Relações e Associações entre Variáveis",
+    fases: [
+      {
+        id: 1,
+        titulo: "Fase 1: Caminhando Juntos ou Separados?",
+        conteudo: [
+          { tipo: "texto", valor: "Diferente da comparação de grupos, aqui buscamos entender como duas variáveis se comportam em conjunto. Existem dois grandes caminhos no ENEM:" },
+          { tipo: "conceito", titulo: "Correlação (Numérico vs Numérico)", valor: "Ex: 'Quanto maior a renda familiar, maior a nota de redação?'. Usamos quando as duas variáveis são números contínuos." },
+          { tipo: "conceito", titulo: "Associação (Categoria vs Categoria)", valor: "Ex: 'A escolha da Língua Estrangeira (Inglês/Espanhol) depende do Tipo de Escola?'. Usamos para categorias nominais." }
+        ]
+      },
+      {
+        id: 2,
+        titulo: "Fase 2: Correlação de Pearson (O Caminho Paramétrico)",
+        conteudo: [
+          { tipo: "texto", valor: "Para variáveis que seguem a distribuição normal, usamos o r de Pearson. Ele mede a força e a direção da relação linear." },
+          { tipo: "formula", valor: "r = \\frac{\\sum (x_i - \\bar{x})(y_i - \\bar{y})}{\\sqrt{\\sum (x_i - \\bar{x})^2 \\sum (y_i - \\bar{y})^2}}", legenda: "r varia de -1 a +1. Próximo de 0 significa 'sem relação'." },
+          { tipo: "alerta", valor: "⚠️ IMPORTANTE: Correlação não é Causalidade! Só porque variáveis caminham juntas, não significa que uma CAUSA a outra." }
+        ]
+      },
+      {
+        id: 3,
+        titulo: "Fase 3: Spearman (Quando a Normalidade Falha)",
+        conteudo: [
+          { tipo: "texto", valor: "Se os seus dados do ENEM tiverem muitos outliers ou não forem normais, o r de Pearson vai te enganar. Nesse caso, usamos o r de Spearman (Não-Paramétrico)." },
+          { tipo: "dica", valor: "💡 O Spearman transforma os valores em rankings (posições) antes de calcular a relação. É muito mais robusto para dados 'bagunçados'." }
+        ]
+      },
+      {
+        id: 4,
+        titulo: "Fase 4: Qui-Quadrado (A Tabela de Contingência)",
+        conteudo: [
+          { tipo: "texto", valor: "Para associar categorias (ex: Raça vs Acesso à Internet), montamos uma tabela cruzada e usamos o Teste de Qui-Quadrado ($ \\chi^2 $)." },
+          { tipo: "conceito", titulo: "Independência", valor: "O teste verifica se as proporções observadas são muito diferentes das proporções esperadas caso não houvesse relação nenhuma." },
+          { tipo: "formula", valor: "\\chi^2 = \\sum \\frac{(O_i - E_i)^2}{E_i}", legenda: "O = Observado, E = Esperado. Se o P-valor < 0.05, as variáveis estão associadas!" }
+        ]
+      },
+      {
+        id: 5,
+        titulo: "Fase 5: Magnitude (V de Cramer)",
+        conteudo: [
+          { tipo: "texto", valor: "Assim como na comparação de grupos, o P-valor aqui só diz se a associação existe. Para saber se ela é FORTE, usamos o V de Cramer." },
+          { tipo: "conceito", titulo: "V de Cramer", valor: "Varia de 0 a 1. \n- < 0.1: Desprezível \n- 0.1 a 0.3: Fraca \n- > 0.5: Forte associação." }
+        ]
+      },
+      {
+        id: 6,
+        titulo: "Fase 6: Missão Final no Canvas",
+        conteudo: [
+          { tipo: "missao", valor: "Sua jornada de associação: \n1. Definir as duas variáveis \n2. Se Numéricas -> Testar Normalidade -> Pearson ou Spearman \n3. Se Categorias -> Qui-Quadrado \n4. Calcular a Magnitude (r ou V de Cramer)." }
+        ]
+      }
+    ]
+  },
+  'trilha-limpeza': {
+    titulo: "Limpeza e Curadoria de Dados",
+    fases: [
+      {
+        id: 1,
+        titulo: "Fase 1: O Caos dos Microdados",
+        conteudo: [
+          { tipo: "texto", valor: "O ENEM gera milhões de linhas. Muitas delas estão incompletas ou trazem candidatos que faltaram à prova. Analisar esses dados sem limpeza gera conclusões erradas." },
+          { tipo: "alerta", valor: "🚨 Candidatos com nota 'Zero' podem ser apenas faltantes, não necessariamente alunos que não sabem o conteúdo. Precisamos decidir o que fazer com eles!" }
+        ]
+      },
+      {
+        id: 2,
+        titulo: "Fase 2: Valores Nulos (Missing Data)",
+        conteudo: [
+          { tipo: "texto", valor: "Em estatística, chamamos dados faltantes de 'NaN' ou 'Null'. No ENEM, isso acontece quando o aluno não preencheu o questionário socioeconômico." },
+          { tipo: "conceito", titulo: "Remover vs Imputar", valor: "Você pode apagar a linha (Remover) ou tentar preencher com a média (Imputar). Para o TCC, a remoção criteriosa é o caminho mais seguro." }
+        ]
+      },
+      {
+        id: 3,
+        titulo: "Fase 3: Missão de Curadoria",
+        conteudo: [
+          { tipo: "missao", valor: "Sua primeira tarefa de curadoria: \n1. Filtrar apenas candidatos presentes (TP_PRESENCA = 1) \n2. Remover linhas onde a Nota de Matemática é Nula \n3. Exportar a base limpa para o Módulo de Análise." }
+        ]
+      }
+    ]
   }
 };
+
+

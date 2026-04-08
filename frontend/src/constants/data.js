@@ -1,7 +1,31 @@
 export const MODULOS = [
-  { id: 1, titulo: 'Módulo 1: Curadoria e Tratamento', desc: 'Limpeza e preparação de dados.', icone: '🧹', cor: '#0ea5e9', status: 'Em breve' },
+  { id: 1, titulo: 'Módulo 1: Curadoria e Tratamento', desc: 'Limpeza e preparação de dados.', icone: '🧹', cor: '#0ea5e9', status: 'Ativo' },
   { id: 2, titulo: 'Módulo 2: Análise Inferencial', desc: 'Investigue hipóteses educacionais com rigor estatístico.', icone: '📈', cor: '#6366f1', status: 'Ativo' },
   { id: 3, titulo: 'Módulo 3: Modelagem e Predição', desc: 'Machine Learning aplicado ao ENEM.', icone: '🤖', cor: '#8b5cf6', status: 'Em breve' }
+];
+
+export const TRILHAS_MODULO_1 = [
+  { 
+    id: 'trilha-limpeza', 
+    titulo: 'Limpeza de Microdados', 
+    desc: 'Remova valores nulos, lide com candidatos ausentes e prepare a base para análise.',
+    icone: '🧼',
+    objetivo: 'Garantir a integridade dos dados iniciais.'
+  },
+  { 
+    id: 'trilha-outliers', 
+    titulo: 'Tratamento de Outliers', 
+    desc: 'Identifique notas impossíveis ou candidatos atípicos usando métodos estatísticos.',
+    icone: '🎯',
+    objetivo: 'Evitar que valores extremos distorçam seus resultados.'
+  },
+  { 
+    id: 'trilha-amostragem', 
+    titulo: 'Técnicas de Amostragem', 
+    desc: 'Como trabalhar com milhões de dados sem travar seu computador? Aprenda amostragem aleatória e estratificada.',
+    icone: '🎲',
+    objetivo: 'Criar subconjuntos representativos da população do ENEM.'
+  }
 ];
 
 export const TRILHAS_MODULO_2 = [

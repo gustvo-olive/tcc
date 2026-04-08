@@ -1,7 +1,27 @@
-import React from 'react';
-import { TRILHAS_MODULO_2 } from '../../constants/data';
+import React, { useEffect, useState } from 'react';
+import { MODULOS, TRILHAS_MODULO_1, TRILHAS_MODULO_2 } from '../../constants/data';
+import { TRILHAS_CONTENT } from '../../constants/lessonsContent';
 
-const Dashboard = ({ acessarLicao, voltarParaModulos }) => {
+const Dashboard = ({ moduloId, acessarLicao, voltarParaModulos }) => {
+  const [progreessos, setProgressos] = useState({});
+  const modulo = MODULOS.find(m => m.id === moduloId);
+  const trilhas = moduloId === 1 ? TRILHAS_MODULO_1 : TRILHAS_MODULO_2;
+
+  useEffect(() => {
+    const novosProgressos = {};
+    trilhas.forEach(trilha => {
+      const salvo = localStorage.getItem(`progresso-${trilha.id}`);
+      if (salvo) {
+        const faseAtual = parseInt(salvo, 10);
+        const totalFases = TRILHAS_CONTENT[trilha.id]?.fases.length || 1;
+        novosProgressos[trilha.id] = Math.round(((faseAtual + 1) / totalFases) * 100);
+      } else {
+        novosProgressos[trilha.id] = 0;
+      }
+    });
+    setProgressos(novosProgressos);
+  }, [trilhas]);
+
   return (
     <div style={{ backgroundColor: '#f1f5f9', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
       <nav style={{ background: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
@@ -13,7 +33,7 @@ const Dashboard = ({ acessarLicao, voltarParaModulos }) => {
             ← Voltar
           </button>
           <h2 style={{ margin: 0, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '24px' }}>📈</span> Módulo 2: Análise Inferencial
+            <span style={{ fontSize: '24px' }}>{modulo?.icone}</span> {modulo?.titulo}
           </h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', color: '#475569' }}>
@@ -24,13 +44,13 @@ const Dashboard = ({ acessarLicao, voltarParaModulos }) => {
       <div style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white', padding: '60px 20px', textAlign: 'center', boxShadow: 'inset 0 -5px 15px rgba(0,0,0,0.2)' }}>
         <h1 style={{ fontSize: '42px', margin: '0 0 10px 0', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Trilhas de Investigação</h1>
         <p style={{ fontSize: '18px', color: '#cbd5e1', margin: '0 auto', maxWidth: '800px', lineHeight: '1.6' }}>
-          Escolha um tipo de problema estatístico para investigar nos microdados do ENEM. Cada trilha guiará você por todas as fases de uma análise real.
+          Escolha um tipo de problema para investigar nos microdados do ENEM. Cada trilha guiará você por todas as fases de uma análise real.
         </p>
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px' }}>
-          {TRILHAS_MODULO_2.map((trilha) => (
+          {trilhas.map((trilha) => (
             <div key={trilha.id} style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0' }}>
               <div style={{ padding: '40px', flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
@@ -40,9 +60,21 @@ const Dashboard = ({ acessarLicao, voltarParaModulos }) => {
                 <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '15px', lineHeight: '1.6' }}>
                   {trilha.desc}
                 </p>
-                <div style={{ background: '#f0f9ff', padding: '15px', borderRadius: '8px', fontSize: '14px', color: '#0369a1', border: '1px solid #e0f2fe' }}>
+                <div style={{ background: '#f0f9ff', padding: '15px', borderRadius: '8px', fontSize: '14px', color: '#0369a1', border: '1px solid #e0f2fe', marginBottom: '20px' }}>
                   <strong>Objetivo:</strong> {trilha.objetivo}
                 </div>
+
+                {progreessos[trilha.id] > 0 && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '5px' }}>
+                      <span>Progresso</span>
+                      <span>{progreessos[trilha.id]}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: `${progreessos[trilha.id]}%`, height: '100%', background: '#10b981', transition: 'width 0.3s' }}></div>
+                    </div>
+                  </div>
+                )}
               </div>
               <button 
                 onClick={() => acessarLicao(trilha.id)} 

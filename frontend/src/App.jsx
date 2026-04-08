@@ -15,7 +15,7 @@ export default function App() {
   // 1. Navegação: Home -> Dashboard do Módulo
   const handleSelecionarModulo = (moduloId) => {
     setModuloSelecionado(moduloId);
-    if (moduloId === 2) {
+    if (moduloId === 1 || moduloId === 2) {
       setPaginaAtual('dashboard');
     }
   };
@@ -43,6 +43,7 @@ export default function App() {
       {/* 2. Dashboard de Lições do Módulo */}
       {paginaAtual === 'dashboard' && (
         <Dashboard 
+          moduloId={moduloSelecionado}
           acessarLicao={handleAcessarLicao} 
           voltarParaModulos={() => setPaginaAtual('selecao-modulo')}
         />
@@ -60,6 +61,7 @@ export default function App() {
       {/* 4. Laboratório (Canvas - Onde o aluno monta o fluxo estatístico) */}
       {paginaAtual === 'canvas' && (
         <FlowDesigner 
+          licaoId={licaoAtual}
           voltarAoMenu={() => setPaginaAtual('teoria')} 
         />
       )}
