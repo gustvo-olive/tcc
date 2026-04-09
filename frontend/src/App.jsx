@@ -7,6 +7,10 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import FlowDesigner from './pages/Canvas/FlowDesigner';
 import Theory from './pages/Theory/Theory';
 
+// Contextos Globais
+import { ToastProvider } from './contexts/ToastContext';
+import { AchievementProvider } from './contexts/AchievementContext';
+
 export default function App() {
   const [paginaAtual, setPaginaAtual] = useState('selecao-modulo');
   const [moduloSelecionado, setModuloSelecionado] = useState(null);
@@ -34,35 +38,40 @@ export default function App() {
   };
 
   return (
-    <ReactFlowProvider>
-      {/* 1. Seleção de Módulos (Home) */}
-      {paginaAtual === 'selecao-modulo' && (
-        <ModuleSelection aoSelecionarModulo={handleSelecionarModulo} />
-      )}
-      
-      {/* 2. Dashboard de Lições do Módulo */}
-      {paginaAtual === 'dashboard' && (
-        <Dashboard 
-          acessarLicao={handleAcessarLicao} 
-          voltarParaModulos={() => setPaginaAtual('selecao-modulo')}
-        />
-      )}
+    <ToastProvider>
+      <AchievementProvider>
+        <ReactFlowProvider>
+          {/* 1. Seleção de Módulos (Home) */}
+          {paginaAtual === 'selecao-modulo' && (
+            <ModuleSelection aoSelecionarModulo={handleSelecionarModulo} />
+          )}
+          
+          {/* 2. Dashboard de Lições do Módulo */}
+          {paginaAtual === 'dashboard' && (
+            <Dashboard 
+              acessarLicao={handleAcessarLicao} 
+              voltarParaModulos={() => setPaginaAtual('selecao-modulo')}
+            />
+          )}
 
-      {/* 3. Tela de Contexto / Teoria (O "Andaime") */}
-      {paginaAtual === 'teoria' && (
-        <Theory 
-          licaoId={licaoAtual}
-          voltarAoDashboard={() => setPaginaAtual('dashboard')}
-          irParaCanvas={handleIrParaCanvas}
-        />
-      )}
+          {/* 3. Tela de Contexto / Teoria (O "Andaime") */}
+          {paginaAtual === 'teoria' && (
+            <Theory 
+              licaoId={licaoAtual}
+              voltarAoDashboard={() => setPaginaAtual('dashboard')}
+              irParaCanvas={handleIrParaCanvas}
+            />
+          )}
 
-      {/* 4. Laboratório (Canvas - Onde o aluno monta o fluxo estatístico) */}
-      {paginaAtual === 'canvas' && (
-        <FlowDesigner 
-          voltarAoMenu={() => setPaginaAtual('teoria')} 
-        />
-      )}
-    </ReactFlowProvider>
+          {/* 4. Laboratório (Canvas - Onde o aluno monta o fluxo estatístico) */}
+          {paginaAtual === 'canvas' && (
+            <FlowDesigner 
+              licaoId={licaoAtual}
+              voltarAoMenu={() => setPaginaAtual('teoria')} 
+            />
+          )}
+        </ReactFlowProvider>
+      </AchievementProvider>
+    </ToastProvider>
   );
 }
