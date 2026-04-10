@@ -1,0 +1,514 @@
+{
+  "nodes": [
+    {
+      "id": "pergunta-1",
+      "position": {
+        "x": 250,
+        "y": 30
+      },
+      "data": {
+        "label": "DESAFIO: O nível de renda impacta o desempenho dos alunos no ENEM 2023?"
+      },
+      "type": "input",
+      "draggable": false,
+      "style": {
+        "background": "#000000",
+        "color": "#ffffff",
+        "fontWeight": "bold",
+        "width": 450,
+        "borderRadius": "8px",
+        "padding": "15px",
+        "textAlign": "center",
+        "fontSize": "14px",
+        "border": "3px solid #6366f1"
+      },
+      "measured": {
+        "width": 450,
+        "height": 78
+      }
+    },
+    {
+      "id": "node-base",
+      "position": {
+        "x": 375,
+        "y": 150
+      },
+      "data": {
+        "label": "📊 Microdados ENEM",
+        "color": "#2563eb",
+        "icon": "📊"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 205,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-tabela",
+      "position": {
+        "x": 399,
+        "y": 240
+      },
+      "data": {
+        "label": "👁️ Ver Tabela",
+        "color": "#0891b2",
+        "icon": "👁️"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 159,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-n",
+      "position": {
+        "x": 398,
+        "y": 330
+      },
+      "data": {
+        "label": "🧮 Contar N",
+        "color": "#0891b2",
+        "icon": "🔢"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 152,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "cond-n",
+      "position": {
+        "x": 421,
+        "y": 432
+      },
+      "data": {
+        "label": "N > 5000?",
+        "color": "#eab308",
+        "icon": "⚙️"
+      },
+      "type": "condition",
+      "measured": {
+        "width": 100,
+        "height": 100
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-ks",
+      "position": {
+        "x": 598,
+        "y": 515
+      },
+      "data": {
+        "label": "⚖️ Kolmogorov-Smirnov",
+        "color": "#8b5cf6",
+        "icon": "📊"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 223,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-shapiro",
+      "position": {
+        "x": 228,
+        "y": 529
+      },
+      "data": {
+        "label": "⚖️ Shapiro-Wilk",
+        "color": "#a855f7",
+        "icon": "📈"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 175,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-levene",
+      "position": {
+        "x": 417,
+        "y": 644
+      },
+      "data": {
+        "label": "⚖️ Teste de Levene",
+        "color": "#f97316",
+        "icon": "⚖️"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 190,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "cond-normal",
+      "position": {
+        "x": 449,
+        "y": 761
+      },
+      "data": {
+        "label": "É Normal?",
+        "color": "#eab308",
+        "icon": "⚙️"
+      },
+      "type": "condition",
+      "measured": {
+        "width": 100,
+        "height": 100
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-anova",
+      "position": {
+        "x": 667.7448162351503,
+        "y": 854.2028117627583
+      },
+      "data": {
+        "label": "🧮 ANOVA",
+        "color": "#ef4444",
+        "icon": "🧮"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 150,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-kruskal",
+      "position": {
+        "x": 189.71142270934422,
+        "y": 876.4516693688461
+      },
+      "data": {
+        "label": "🧮 Kruskal-Wallis",
+        "color": "#16a34a",
+        "icon": "📉"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 181,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "cond-p-anova",
+      "position": {
+        "x": 689.5789111644249,
+        "y": 973.1075569967177
+      },
+      "data": {
+        "label": "P < 0.05?",
+        "color": "#eab308",
+        "icon": "⚙️"
+      },
+      "type": "condition",
+      "measured": {
+        "width": 100,
+        "height": 100
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "cond-p-kruskal",
+      "position": {
+        "x": 217.0063261587618,
+        "y": 974.2028117627581
+      },
+      "data": {
+        "label": "P < 0.05?",
+        "color": "#eab308",
+        "icon": "⚙️"
+      },
+      "type": "condition",
+      "measured": {
+        "width": 100,
+        "height": 100
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-eta",
+      "position": {
+        "x": 821.8369079218097,
+        "y": 1117.4977152121758
+      },
+      "data": {
+        "label": "📏 Eta²",
+        "color": "#0f766e",
+        "icon": "📏"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 150,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-epsilon",
+      "position": {
+        "x": 333.0172271505536,
+        "y": 1110.921875683141
+      },
+      "data": {
+        "label": "📏 Epsilon²",
+        "color": "#0f766e",
+        "icon": "📏"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 150,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-tukey",
+      "position": {
+        "x": 801.9498381099248,
+        "y": 1218.5482409119477
+      },
+      "data": {
+        "label": "📊 Teste de Tukey",
+        "color": "#d97706",
+        "icon": "📊"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 184,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-dunn",
+      "position": {
+        "x": 346.5504225283065,
+        "y": 1215.4755056922763
+      },
+      "data": {
+        "label": "🔥 Heatmap de Dunn",
+        "color": "#d97706",
+        "icon": "🔥"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 204,
+        "height": 58
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "end-h0",
+      "position": {
+        "x": 32.414762676813126,
+        "y": 1267.414762676813
+      },
+      "data": {
+        "label": "🛑 Aceitar H0",
+        "color": "#94a3b8",
+        "icon": "⚙️"
+      },
+      "type": "end",
+      "measured": {
+        "width": 130,
+        "height": 44
+      },
+      "selected": true,
+      "dragging": false
+    },
+    {
+      "id": "end-sucesso",
+      "position": {
+        "x": 549.1758123599471,
+        "y": 1344.816862319221
+      },
+      "data": {
+        "label": "🏆 Sucesso",
+        "color": "#10b981",
+        "icon": "⚙️"
+      },
+      "type": "end",
+      "measured": {
+        "width": 120,
+        "height": 44
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "pergunta-1",
+      "target": "node-base",
+      "animated": true
+    },
+    {
+      "id": "e2",
+      "source": "node-base",
+      "target": "node-tabela",
+      "animated": true
+    },
+    {
+      "id": "e3",
+      "source": "node-tabela",
+      "target": "node-n",
+      "animated": true
+    },
+    {
+      "id": "e4",
+      "source": "node-n",
+      "target": "cond-n",
+      "animated": true
+    },
+    {
+      "id": "e5",
+      "source": "cond-n",
+      "sourceHandle": "sim",
+      "target": "node-ks",
+      "animated": true
+    },
+    {
+      "id": "e6",
+      "source": "cond-n",
+      "sourceHandle": "nao",
+      "target": "node-shapiro",
+      "animated": true
+    },
+    {
+      "id": "e7",
+      "source": "node-ks",
+      "target": "node-levene",
+      "animated": true
+    },
+    {
+      "id": "e8",
+      "source": "node-shapiro",
+      "target": "node-levene",
+      "animated": true
+    },
+    {
+      "id": "e9",
+      "source": "node-levene",
+      "target": "cond-normal",
+      "animated": true
+    },
+    {
+      "id": "e10",
+      "source": "cond-normal",
+      "sourceHandle": "sim",
+      "target": "node-anova",
+      "animated": true
+    },
+    {
+      "id": "e11",
+      "source": "cond-normal",
+      "sourceHandle": "nao",
+      "target": "node-kruskal",
+      "animated": true
+    },
+    {
+      "id": "e12",
+      "source": "node-anova",
+      "target": "cond-p-anova",
+      "animated": true
+    },
+    {
+      "id": "e13",
+      "source": "node-kruskal",
+      "target": "cond-p-kruskal",
+      "animated": true
+    },
+    {
+      "id": "e14",
+      "source": "cond-p-anova",
+      "sourceHandle": "sim",
+      "target": "node-eta",
+      "animated": true
+    },
+    {
+      "id": "e15",
+      "source": "cond-p-anova",
+      "sourceHandle": "nao",
+      "target": "end-h0",
+      "animated": true
+    },
+    {
+      "id": "e16",
+      "source": "cond-p-kruskal",
+      "sourceHandle": "sim",
+      "target": "node-epsilon",
+      "animated": true
+    },
+    {
+      "id": "e17",
+      "source": "cond-p-kruskal",
+      "sourceHandle": "nao",
+      "target": "end-h0",
+      "animated": true
+    },
+    {
+      "id": "e18",
+      "source": "node-eta",
+      "target": "node-tukey",
+      "animated": true
+    },
+    {
+      "id": "e19",
+      "source": "node-epsilon",
+      "target": "node-dunn",
+      "animated": true
+    },
+    {
+      "id": "e20",
+      "source": "node-tukey",
+      "target": "end-sucesso",
+      "animated": true
+    },
+    {
+      "id": "e21",
+      "source": "node-dunn",
+      "target": "end-sucesso",
+      "animated": true
+    }
+  ],
+  "metadata": {
+    "licaoId": "trilha-multiplos-grupos",
+    "criadoEm": "2026-04-09T23:22:03.702Z",
+    "autor": "Professor/Admin"
+  }
+}

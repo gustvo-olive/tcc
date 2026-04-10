@@ -233,22 +233,96 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
     setEnviando(true);
     try {
       const response = await enviarGrafoParaProcessamento(nodes, edges);
+      console.log("✅ Resposta do Servidor:", response);
+
       if (response.preview) {
         setDadosReais(response.preview);
         setEstatisticas(response.estatisticas);
-        alert("✅ Análise concluída com sucesso!");
+        
+        if (response.validacao) {
+          const { status, erros, acertos, nota, patente } = response.validacao;
+          
+          if (status === "concluido") {
+            const partesPatente = patente.split(' ');
+            const emojiPatente = partesPatente[partesPatente.length - 1];
+            
+            setModalConfig({
+              titulo: "📊 Relatório de Rigor Científico",
+              conteudo: (
+                <div style={{ textAlign: 'center', padding: '10px' }}>
+                   <div style={{ fontSize: '60px', marginBottom: '10px' }}>{emojiPatente}</div>
+                   <h2 style={{ color: '#10b981', margin: '0' }}>{patente}</h2>
+                   <div style={{ margin: '20px 0', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden', height: '25px', position: 'relative' }}>
+                      <div style={{ width: `${nota}%`, background: '#10b981', height: '100%', transition: 'width 1s ease-in-out' }}></div>
+                      <span style={{ position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', fontWeight: 'bold', fontSize: '14px' }}>Nota: {nota}/100</span>
+                   </div>
+                   
+                   <div style={{ textAlign: 'left', background: '#f8fafc', padding: '15px', borderRadius: '8px' }}>
+                      <h4 style={{ margin: '0 0 10px 0', color: '#475569' }}>📑 Itens Identificados:</h4>
+                      {acertos.map((acc, i) => (
+                        <div key={i} style={{ fontSize: '13px', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: '#10b981' }}>✓</span> {acc}
+                        </div>
+                      ))}
+                   </div>
+                   <p style={{ marginTop: '15px', fontSize: '12px', color: '#94a3b8' }}>Parabéns! Sua análise seguiu os padrões científicos exigidos.</p>
+                </div>
+              )
+            });
+            setModalAberto(true);
+          } else if (status === "erro_metodologico") {
+            setModalConfig({
+              titulo: "⚠️ Erro Metodológico Detectado",
+              conteudo: (
+                <div style={{ padding: '10px' }}>
+                   <p>Sua análise contém inconsistências estatísticas:</p>
+                   <div style={{ background: '#fef2f2', padding: '15px', borderRadius: '8px', border: '1px solid #fee2e2' }}>
+                      {erros.map((err, i) => <div key={i} style={{ color: '#ef4444', marginBottom: '8px' }}>❌ {err}</div>)}
+                   </div>
+                   <p style={{ marginTop: '15px', fontSize: '14px' }}>Dica: O ENEM tem N > 5000 e os dados não são normais.</p>
+                </div>
+              )
+            });
+            setModalAberto(true);
+          }
+        }
       }
     } catch (error) {
+      console.error("Erro na validação:", error);
       alert("Erro ao conectar com o motor estatístico.");
     } finally {
       setEnviando(false);
     }
   };
 
+  const exportGoldStandard = () => {
+    const data = { nodes, edges, metadata: { licaoId, criadoEm: new Date().toISOString() } };
+    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
+    const link = document.createElement("a");
+    link.href = jsonString;
+    link.download = `gabarito_${licaoId || 'analise'}.json`;
+    link.click();
+  };
+
+  const importGoldStandard = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target.result);
+        if (json.nodes && json.edges) {
+          setNodes(json.nodes);
+          setEdges(json.edges);
+        }
+      } catch (err) { alert("Erro ao importar JSON."); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  };
+
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      
-      {/* SIDEBAR COMPLETA RESTAURADA */}
       <div style={{ width: '320px', background: '#f8fafc', padding: '15px', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
         <button onClick={voltarAoMenu} style={{ padding: '10px', background: '#e2e8f0', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px' }}>⬅ Voltar</button>
         
@@ -287,7 +361,10 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
 
       <div style={{ flex: 1, position: 'relative' }}>
         <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} nodesDraggable={!isLocked} fitView>
-          <Panel position="top-right" style={{ display: 'flex', gap: '10px' }}>
+          <Panel position="top-right" style={{ display: "flex", gap: "10px" }}>
+            <input type="file" id="import-json" style={{ display: 'none' }} accept=".json" onChange={importGoldStandard} />
+            <button onClick={() => document.getElementById('import-json').click()} style={{ padding: '10px 15px', background: '#475569', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>📤 Importar</button>
+            <button onClick={exportGoldStandard} style={{ padding: '10px 15px', background: '#334155', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>📥 Exportar</button>
             <button onClick={() => setIsLocked(!isLocked)} style={{ padding: '10px', background: isLocked ? '#ef4444' : '#e2e8f0', borderRadius: '5px' }}>{isLocked ? '🔒' : '🔓'}</button>
             <button onClick={submitHypothesis} disabled={enviando} style={{ padding: '10px 20px', background: enviando ? '#94a3b8' : '#10b981', color: 'white', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}>
               {enviando ? '⏳ ...' : '🚀 Validar'}
