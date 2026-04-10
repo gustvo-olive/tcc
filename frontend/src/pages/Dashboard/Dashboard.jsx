@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { MODULOS, TRILHAS_MODULO_1, TRILHAS_MODULO_2 } from '../../constants/data';
 import { TRILHAS_CONTENT } from '../../constants/lessonsContent';
+import BadgesPanel from '../../components/ui/BadgesPanel';
+import { unlockBadge } from '../../services/badgeService';
 
 const Dashboard = ({ moduloId, acessarLicao, voltarParaModulos }) => {
   const [progreessos, setProgressos] = useState({});
@@ -9,17 +11,22 @@ const Dashboard = ({ moduloId, acessarLicao, voltarParaModulos }) => {
 
   useEffect(() => {
     const novosProgressos = {};
+    let todasCompletas = true;
     trilhas.forEach(trilha => {
       const salvo = localStorage.getItem(`progresso-${trilha.id}`);
       if (salvo) {
         const faseAtual = parseInt(salvo, 10);
         const totalFases = TRILHAS_CONTENT[trilha.id]?.fases.length || 1;
-        novosProgressos[trilha.id] = Math.round(((faseAtual + 1) / totalFases) * 100);
+        const pct = Math.round(((faseAtual + 1) / totalFases) * 100);
+        novosProgressos[trilha.id] = pct;
+        if (pct < 100) todasCompletas = false;
       } else {
         novosProgressos[trilha.id] = 0;
+        todasCompletas = false;
       }
     });
     setProgressos(novosProgressos);
+    if (todasCompletas && trilhas.length > 0) unlockBadge('completista');
   }, [trilhas]);
 
   return (
@@ -91,11 +98,12 @@ const Dashboard = ({ moduloId, acessarLicao, voltarParaModulos }) => {
                 onMouseOver={(e) => e.currentTarget.style.background = '#4f46e5'}
                 onMouseOut={(e) => e.currentTarget.style.background = '#6366f1'}
               >
-                INICIAR TRILHA EM FASES →
+                INICIAR TRILHA EM FASES &rarr;
               </button>
             </div>
           ))}
         </div>
+        <BadgesPanel />
       </div>
     </div>
   );

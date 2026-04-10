@@ -19,6 +19,7 @@ import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import Tooltip from '../../components/ui/Tooltip';
 import CanvasTutorial from '../../components/ui/CanvasTutorial';
+import { unlockBadge } from '../../services/badgeService';
 
 // --- CONSTANTES FORA DO COMPONENTE PARA ESTABILIDADE ---
 const DIC_RENDA_COMPLETO = {
@@ -229,6 +230,12 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
       style: (tipo === 'default') ? { background: color, color: 'white', fontWeight: 'bold', borderRadius: '8px', padding: '10px', fontSize: '13px' } : undefined
     };
     setNodes((nds) => [...nds, newNode]);
+
+    // Badge: Mestre da Normalidade
+    const lowerLabel = label.toLowerCase();
+    if (lowerLabel.includes('shapiro') || lowerLabel.includes('kolmogorov')) {
+      unlockBadge('mestre-normalidade');
+    }
   };
 
   const submitHypothesis = async () => {
@@ -245,6 +252,9 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
           const { status, erros, acertos, nota, patente } = response.validacao;
           
           if (status === "concluido") {
+            // Badges do Canvas
+            unlockBadge('cientista');
+            if (nota >= 80) unlockBadge('guardiao-rigor');
             const partesPatente = patente.split(' ');
             const emojiPatente = partesPatente[partesPatente.length - 1];
             

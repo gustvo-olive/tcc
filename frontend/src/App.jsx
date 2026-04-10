@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
+import { unlockBadge } from './services/badgeService';
+import BadgeNotification from './components/ui/BadgeNotification';
 
 // Páginas
 import ModuleSelection from './pages/ModuleSelection/ModuleSelection';
@@ -23,17 +25,18 @@ export default function App() {
   // 2. Navegação: Dashboard -> Teoria (ou direto pro Canvas se for o Desafio Final)
   const handleAcessarLicao = (licaoId) => {
     setLicaoAtual(licaoId);
-    // Na nossa estrutura, a lição 6 é o Desafio (PBL), o ideal é que ele veja a instrução no Theory antes, 
-    // ou vá direto pro Canvas. Aqui, vamos mandar todos para Theory primeiro para contextualização.
     setPaginaAtual('teoria');
+    unlockBadge('primeiro-passo');
   };
 
   // 3. Navegação: Teoria -> Canvas (Laboratório)
   const handleIrParaCanvas = (licaoId) => {
     setPaginaAtual('canvas');
+    unlockBadge('explorador');
   };
 
   return (
+    <>
     <ReactFlowProvider>
       {/* 1. Seleção de Módulos (Home) */}
       {paginaAtual === 'selecao-modulo' && (
@@ -66,5 +69,7 @@ export default function App() {
         />
       )}
     </ReactFlowProvider>
+    <BadgeNotification />
+    </>
   );
 }

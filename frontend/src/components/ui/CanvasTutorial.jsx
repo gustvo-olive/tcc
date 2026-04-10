@@ -101,15 +101,11 @@ const CanvasTutorial = () => {
                             {TUTORIAL_STEPS.map((_, index) => (
                                 <div 
                                     key={index} 
-                                    style={{ 
-                                        width: '10px', height: '10px', borderRadius: '50%', 
-                                        background: index === currentStep ? '#6366f1' : '#cbd5e1',
-                                        transition: 'background 0.3s'
-                                    }} 
                                     title={`Ir para o passo ${index + 1}`}
                                     onClick={() => setCurrentStep(index)}
                                     style={{
-                                        ...{ width: '10px', height: '10px', borderRadius: '50%', cursor: 'pointer', transition: 'background 0.3s' },
+                                        width: '10px', height: '10px', borderRadius: '50%',
+                                        cursor: 'pointer', transition: 'background 0.3s',
                                         background: index === currentStep ? '#6366f1' : '#cbd5e1'
                                     }}
                                 />
