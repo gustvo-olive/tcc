@@ -22,20 +22,28 @@ export const TRILHAS_CONTENT = {
       },
       {
         id: 3,
-        titulo: "Fase 3: A Bifurcação de Decisão",
+        titulo: "Fase 3: Teste de Levene (O Porteiro da ANOVA)",
         conteudo: [
-          { tipo: "texto", valor: "Agora você decide qual 'motor' estatístico vai usar. Existem dois caminhos:" },
-          { 
-            tipo: "hipoteses", 
-            h0: "ROTA A (ANOVA): Use se os dados forem NORMAIS e as variâncias iguais. É o teste mais potente.", 
-            h1: "ROTA B (Kruskal-Wallis): Use se a normalidade FALHAR. É o teste mais seguro e robusto." 
-          },
-          { tipo: "texto", valor: "Ambos testam a mesma coisa: 'Os grupos são diferentes?'. Mas a ANOVA olha para as Médias, enquanto o Kruskal-Wallis olha para os Rankings." }
+          { tipo: "texto", valor: "Antes de decidir pela ANOVA, precisamos checar a HOMOCEDASTICIDADE (Variâncias Iguais). Imagine comparar a altura de crianças com a de adultos; a variação nos grupos é muito diferente?" },
+          { tipo: "conceito", titulo: "Teste de Levene", valor: "Ele testa se a dispersão (espalhamento) dos dados é a mesma em todos os grupos." },
+          { tipo: "alerta", valor: "🚨 REGRA: Se o P-valor do Levene for < 0.05, as variâncias são HETEROGÊNEAS (Desiguais). Nesse caso, a ANOVA tradicional falha e você deve ir para o Kruskal-Wallis!" }
         ]
       },
       {
         id: 4,
-        titulo: "Fase 4: Rota A - ANOVA (Paramétrica)",
+        titulo: "Fase 4: A Bifurcação de Decisão",
+        conteudo: [
+          { tipo: "texto", valor: "Agora você cruza os dois portões (Normalidade + Levene) para escolher seu motor:" },
+          { 
+            tipo: "hipoteses", 
+            h0: "ROTA A (ANOVA): Use se os dados forem NORMAIS E as variâncias forem IGUAIS (P > 0.05 no Levene).", 
+            h1: "ROTA B (Kruskal-Wallis): Use se a normalidade FALHAR OU se as variâncias forem DESIGUAIS." 
+          }
+        ]
+      },
+      {
+        id: 5,
+        titulo: "Fase 5: Rota A - ANOVA (Paramétrica)",
         conteudo: [
           { tipo: "texto", valor: "A ANOVA (Análise de Variância) compara se a variação entre os grupos é maior do que a variação 'bagunçada' dentro de cada grupo." },
           { tipo: "formula", valor: "F = \\frac{\\text{Variância Entre Grupos}}{\\text{Variância Dentro dos Grupos}}", legenda: "Se F for alto e P < 0.05, pelo menos um grupo tem média diferente." },
@@ -43,8 +51,8 @@ export const TRILHAS_CONTENT = {
         ]
       },
       {
-        id: 5,
-        titulo: "Fase 5: Rota B - Kruskal-Wallis (Não-Paramétrica)",
+        id: 6,
+        titulo: "Fase 6: Rota B - Kruskal-Wallis (Não-Paramétrica)",
         conteudo: [
           { tipo: "texto", valor: "Quando os dados do ENEM estão 'tortos' (muitos zeros ou notas mil), a média engana. O Kruskal-Wallis ignora os valores brutos e foca na ordem das notas." },
           { tipo: "conceito", titulo: "Ranking (Postos)", valor: "Imagine colocar todos os alunos em uma fila única. O teste vê se os alunos de escola 'Federal' estão acumulados no fim da fila (notas altas)." },
@@ -52,8 +60,8 @@ export const TRILHAS_CONTENT = {
         ]
       },
       {
-        id: 6,
-        titulo: "Fase 6: Tamanho do Efeito (Magnitude)",
+        id: 7,
+        titulo: "Fase 7: Tamanho do Efeito (Magnitude)",
         conteudo: [
           { tipo: "texto", valor: "Não basta ser diferente, tem que ser RELEVANTE. O p-valor não diz o tamanho da desigualdade." },
           { tipo: "conceito", titulo: "Eta Quadrado (η²)", valor: "Para ANOVA. Diz quantos % da nota é explicada pelo grupo (ex: 'O tipo de escola explica 20% da nota do aluno')." },
@@ -61,38 +69,64 @@ export const TRILHAS_CONTENT = {
         ]
       },
       {
-        id: 7,
-        titulo: "Fase 7: Missão Final no Canvas",
+        id: 8,
+        titulo: "Fase 8: Missão Final no Canvas",
         conteudo: [
           { tipo: "missao", valor: "DESAFIO: O nível de renda impacta o desempenho dos alunos no ENEM 2023?" }
         ]
       }
-
     ]
   },
   'trilha-dois-grupos': {
-    titulo: "Comparação de Dois Grupos",
+    titulo: "Comparação de Dois Grupos (Gênero e Escola)",
     fases: [
       {
         id: 1,
-        titulo: "Fase 1: Contexto e Hipótese",
+        titulo: "Fase 1: O Duelo de Grupos",
         conteudo: [
-          { tipo: "texto", valor: "Queremos saber se alunos de diferentes gêneros ou estados têm desempenhos diferentes em uma única prova." },
-          { tipo: "hipoteses", h0: "Não há diferença entre os dois grupos.", h1: "Existe uma diferença significativa." }
+          { tipo: "texto", valor: "Diferente da trilha anterior, aqui focamos em apenas DOIS grupos. O objetivo é saber se há uma vantagem estatística de um sobre o outro." },
+          { tipo: "hipoteses", h0: "Os dois grupos têm o mesmo desempenho (Ex: Homens = Mulheres).", h1: "Existe uma diferença significativa entre eles." },
+          { tipo: "dica", valor: "💡 No ENEM, costumamos comparar Homens vs Mulheres (TP_SEXO) ou Escola Pública vs Privada (TP_ESCOLA)." }
         ]
       },
       {
         id: 2,
-        titulo: "Fase 2: Escolha do Teste",
+        titulo: "Fase 2: Normalidade e Homocedasticidade",
         conteudo: [
-          { tipo: "conceito", titulo: "Teste T vs Mann-Whitney", valor: "Se os dados forem normais, use Teste T (Paramétrico). Se houver muitos valores extremos (outliers), use Mann-Whitney (Não-Paramétrico)." }
+          { tipo: "texto", valor: "Assim como em múltiplos grupos, aqui também temos 'porteiros':" },
+          { tipo: "conceito", titulo: "Normalidade (K-S)", valor: "Como o ENEM tem N > 5000, o Kolmogorov-Smirnov dirá se os dados seguem a curva de sino." },
+          { tipo: "conceito", titulo: "Variância (Levene)", valor: "O Teste de Levene aqui é crucial para o Teste T. Se as variâncias forem diferentes, usamos uma correção chamada 'Welch'." }
         ]
       },
       {
         id: 3,
-        titulo: "Fase 3: Execução no Laboratório",
+        titulo: "Fase 3: T-Student (O Caminho Clássico)",
         conteudo: [
-          { tipo: "missao", valor: "Sua missão: Comparar a nota de Redação entre Homens e Mulheres.\n1. Carregue os Microdados\n2. Verifique a Normalidade\n3. Escolha entre Teste T ou Mann-Whitney\n4. Interprete o P-Valor." }
+          { tipo: "texto", valor: "Se os seus dados forem NORMAIS, o Teste T para amostras independentes é a escolha ideal. Ele compara as médias dos dois grupos." },
+          { tipo: "formula", valor: "t = \\frac{\\bar{x}_1 - \\bar{x}_2}{SE}", legenda: "Mede a distância entre as médias em unidades de erro padrão." }
+        ]
+      },
+      {
+        id: 4,
+        titulo: "Fase 4: Mann-Whitney U (A Alternativa Robusta)",
+        conteudo: [
+          { tipo: "texto", valor: "Se a normalidade falhar (comum em Redação ou Matemática), usamos o Mann-Whitney. Ele não olha para a média, mas para quem 'ganha' mais duelos de notas na amostra." },
+          { tipo: "dica", valor: "💡 Ele é excelente quando temos notas 'mil' ou 'zero' que puxariam a média para longe da realidade." }
+        ]
+      },
+      {
+        id: 5,
+        titulo: "Fase 5: Magnitude (d de Cohen)",
+        conteudo: [
+          { tipo: "texto", valor: "A diferença é estatística, mas é grande? O 'd de Cohen' mede quantas unidades de desvio padrão separam os grupos." },
+          { tipo: "conceito", titulo: "Escala de Cohen", valor: "0.2 (Pequeno), 0.5 (Médio), 0.8 (Grande)." }
+        ]
+      },
+      {
+        id: 6,
+        titulo: "Fase 6: Missão Final",
+        conteudo: [
+          { tipo: "missao", valor: "DESAFIO: Existe diferença significativa entre a nota de REDAÇÃO de Homens e Mulheres no ENEM 2023?" }
         ]
       }
     ]
