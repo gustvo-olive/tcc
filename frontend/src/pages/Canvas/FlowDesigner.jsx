@@ -17,6 +17,8 @@ import { TRILHAS_CONTENT } from '../../constants/lessonsContent';
 import { enviarGrafoParaProcessamento } from '../../services/api';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
+import Tooltip from '../../components/ui/Tooltip';
+import CanvasTutorial from '../../components/ui/CanvasTutorial';
 
 // --- CONSTANTES FORA DO COMPONENTE PARA ESTABILIDADE ---
 const DIC_RENDA_COMPLETO = {
@@ -279,7 +281,7 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
                    <div style={{ background: '#fef2f2', padding: '15px', borderRadius: '8px', border: '1px solid #fee2e2' }}>
                       {erros.map((err, i) => <div key={i} style={{ color: '#ef4444', marginBottom: '8px' }}>❌ {err}</div>)}
                    </div>
-                   <p style={{ marginTop: '15px', fontSize: '14px' }}>Dica: O ENEM tem N > 5000 e os dados não são normais.</p>
+                   <p style={{ marginTop: '15px', fontSize: '14px' }}>Dica: O ENEM tem N &gt; 5000 e os dados não são normais.</p>
                 </div>
               )
             });
@@ -323,40 +325,40 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
 
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ width: '320px', background: '#f8fafc', padding: '15px', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
+      <div style={{ width: '320px', background: '#f8fafc', padding: '15px', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', overflowX: 'visible' }}>
         <button onClick={voltarAoMenu} style={{ padding: '10px', background: '#e2e8f0', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px' }}>⬅ Voltar</button>
         
         <h4 style={{ margin: '0', color: '#475569', fontSize: '12px' }}>1. EXPLORAÇÃO (EDA)</h4>
-        <button onClick={() => addBlock('📊 Microdados ENEM', '#2563eb', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Base ENEM 2023</button>
-        <button onClick={() => addBlock('👁️ Ver Tabela', '#0891b2', 'tool', '👁️')} style={UI_STYLES.btnStyle}>+ Visualizar Tabela</button>
-        <button onClick={() => addBlock('🧮 Contar N', '#0891b2', 'tool', '🔢')} style={UI_STYLES.btnStyle}>+ Descobrir "N"</button>
-        <button onClick={() => addBlock('📉 Boxplot de Renda', '#0891b2', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Ver Distribuição</button>
-        <button onClick={() => addBlock('N > 5000?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: N &gt; 5000?</button>
+        <Tooltip conceito="Carrega a base de dados dos Microdados do ENEM 2023 para o Lab." quando="Deve ser sempre o primeiro bloco do seu fluxo."><button onClick={() => addBlock('📊 Microdados ENEM', '#2563eb', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Base ENEM 2023</button></Tooltip>
+        <Tooltip conceito="Exibe os dados brutos carregados em uma tabela de amostra." quando="Quiser inspecionar como os dados estão estruturados."><button onClick={() => addBlock('👁️ Ver Tabela', '#0891b2', 'tool', '👁️')} style={UI_STYLES.btnStyle}>+ Visualizar Tabela</button></Tooltip>
+        <Tooltip conceito="Conta e exibe o número total de registros (N) da base." quando="Precisar confirmar o tamanho da amostra antes de decidir qual teste usar."><button onClick={() => addBlock('🧮 Contar N', '#0891b2', 'tool', '🔢')} style={UI_STYLES.btnStyle}>+ Descobrir "N"</button></Tooltip>
+        <Tooltip conceito="Gera um Boxplot comparando a distribuição das notas por faixas de renda." quando="Quiser visualizar a dispersão dos dados antes de qualquer teste."><button onClick={() => addBlock('📉 Boxplot de Renda', '#0891b2', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Ver Distribuição</button></Tooltip>
+        <Tooltip conceito="Ponto de decisão: a amostra possui mais de 5.000 registros?" quando="Após contar o N para decidir se o Teorema do Limite Central se aplica."><button onClick={() => addBlock('N > 5000?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: N &gt; 5000?</button></Tooltip>
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>2. PRESSUPOSTOS</h4>
-        <button onClick={() => addBlock('⚖️ Teste de Levene', '#f97316', 'tool', '⚖️')} style={UI_STYLES.btnStyle}>+ Teste de Levene</button>
-        <button onClick={() => addBlock('⚖️ Kolmogorov-Smirnov', '#8b5cf6', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Kolmogorov-Smirnov</button>
-        <button onClick={() => addBlock('⚖️ Shapiro-Wilk', '#a855f7', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Shapiro-Wilk</button>
+        <Tooltip conceito="Testa se a variância (dispersão) dos grupos é homogênea." quando="Antes de rodar uma ANOVA, para validar o pressuposto de homocedasticidade."><button onClick={() => addBlock('⚖️ Teste de Levene', '#f97316', 'tool', '⚖️')} style={UI_STYLES.btnStyle}>+ Teste de Levene</button></Tooltip>
+        <Tooltip conceito="Compara a distribuição dos dados com uma distribuição normal teórica." quando="Para testar normalidade em amostras grandes (N > 50)."><button onClick={() => addBlock('⚖️ Kolmogorov-Smirnov', '#8b5cf6', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Kolmogorov-Smirnov</button></Tooltip>
+        <Tooltip conceito="Teste de normalidade mais sensível e preciso." quando="Para amostras menores (N &lt; 50). Mais rigoroso que o K-S."><button onClick={() => addBlock('⚖️ Shapiro-Wilk', '#a855f7', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Shapiro-Wilk</button></Tooltip>
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>3. INFERÊNCIA</h4>
-        <button onClick={() => addBlock('É Normal?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: É Normal?</button>
-        <button onClick={() => addBlock('🧮 ANOVA', '#ef4444', 'tool', '🧮')} style={UI_STYLES.btnStyle}>+ ANOVA</button>
-        <button onClick={() => addBlock('🧮 Kruskal-Wallis', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Kruskal-Wallis</button>
+        <Tooltip conceito="Ponto de decisão: os dados seguem uma distribuição normal?" quando="Após rodar o Shapiro-Wilk ou K-S, para escolher o caminho certo."><button onClick={() => addBlock('É Normal?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: É Normal?</button></Tooltip>
+        <Tooltip conceito="Teste paramétrico que compara as médias de 3 ou mais grupos." quando="Os dados forem normalmente distribuídos e as variâncias forem homogêneas."><button onClick={() => addBlock('🧮 ANOVA', '#ef4444', 'tool', '🧮')} style={UI_STYLES.btnStyle}>+ ANOVA</button></Tooltip>
+        <Tooltip conceito="Alternativa não-paramétrica à ANOVA, baseada em postos (ranks)." quando="Os dados não forem normais — caso do ENEM com N muito grande."><button onClick={() => addBlock('🧮 Kruskal-Wallis', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Kruskal-Wallis</button></Tooltip>
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>4. SIGNIFICÂNCIA</h4>
-        <button onClick={() => addBlock('P < 0.05?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: P-valor &lt; 0.05?</button>
+        <Tooltip conceito="Ponto de decisão: o p-valor do teste foi menor que 0,05?" quando="Após rodar a ANOVA ou Kruskal-Wallis para checar se há diferença real."><button onClick={() => addBlock('P < 0.05?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: P-valor &lt; 0.05?</button></Tooltip>
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>5. TAMANHO DO EFEITO</h4>
-        <button onClick={() => addBlock('📏 Epsilon²', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ Epsilon-Squared</button>
-        <button onClick={() => addBlock('📏 Eta²', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ Eta-Squared</button>
+        <Tooltip conceito="Mede a magnitude da diferença encontrada pelo Kruskal-Wallis." quando="Após confirmar significância (p &lt; 0.05) usando o caminho não-paramétrico."><button onClick={() => addBlock('📏 Epsilon²', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ Epsilon-Squared</button></Tooltip>
+        <Tooltip conceito="Mede a magnitude da diferença encontrada pela ANOVA." quando="Após confirmar significância (p &lt; 0.05) usando o caminho paramétrico."><button onClick={() => addBlock('📏 Eta²', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ Eta-Squared</button></Tooltip>
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>6. POST-HOC</h4>
-        <button onClick={() => addBlock('🔥 Heatmap de Dunn', '#d97706', 'tool', '🔥')} style={UI_STYLES.btnStyle}>+ Teste de Dunn</button>
-        <button onClick={() => addBlock('📊 Teste de Tukey', '#d97706', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Teste de Tukey</button>
+        <Tooltip conceito="Identifica quais pares de grupos são estatisticamente diferentes." quando="Após o Kruskal-Wallis ser significativo, para saber quem difere de quem."><button onClick={() => addBlock('🔥 Heatmap de Dunn', '#d97706', 'tool', '🔥')} style={UI_STYLES.btnStyle}>+ Teste de Dunn</button></Tooltip>
+        <Tooltip conceito="Comparação par-a-par de médias após a ANOVA." quando="Após a ANOVA ser significativa, para detalhar quais grupos diferem."><button onClick={() => addBlock('📊 Teste de Tukey', '#d97706', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Teste de Tukey</button></Tooltip>
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>7. CONCLUSÃO</h4>
-        <button onClick={() => addBlock('🛑 Aceitar H0', '#94a3b8', 'end')} style={UI_STYLES.btnStyle}>+ Fim: Aceitar H0</button>
-        <button onClick={() => addBlock('🏆 Sucesso', '#10b981', 'end')} style={UI_STYLES.btnStyle}>+ Fim: Sucesso</button>
+        <Tooltip conceito="Encerra o fluxo sem rejeitar a hipótese nula." quando="O p-valor for maior que 0.05 (sem diferença significativa entre grupos)."><button onClick={() => addBlock('🛑 Aceitar H0', '#94a3b8', 'end')} style={UI_STYLES.btnStyle}>+ Fim: Aceitar H0</button></Tooltip>
+        <Tooltip conceito="Encerra o fluxo rejeitando H0 com rigor metodológico completo." quando="Todo o caminho científico foi seguido e a diferença foi confirmada."><button onClick={() => addBlock('🏆 Sucesso', '#10b981', 'end')} style={UI_STYLES.btnStyle}>+ Fim: Sucesso</button></Tooltip>
       </div>
 
       <div style={{ flex: 1, position: 'relative' }}>
@@ -373,6 +375,7 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
           <CustomControls />
           <Background variant="dots" gap={15} size={2} color="#cbd5e1" />
         </ReactFlow>
+        <CanvasTutorial />
       </div>
 
       <Modal isOpen={modalAberto} onClose={() => setModalAberto(false)} title={modalConfig.titulo}>
