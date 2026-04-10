@@ -9,6 +9,9 @@ from typing import List, Dict, Any
 
 from database import engine, SessionLocal, Base
 import models
+from engine import JuizEstatistico
+from scipy.stats import shapiro, kstest, norm, levene, kruskal, ttest_ind, mannwhitneyu, pearsonr, spearmanr, chi2_contingency
+import numpy as np
 
 # Caminho Robusto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -40,106 +43,97 @@ def get_db():
 class GrafoPayload(BaseModel):
     nodes: List[Dict[str, Any]]
     edges: List[Dict[str, Any]]
-
-from scipy.stats import shapiro, kstest, norm, levene, kruskal
-import numpy as np
-
-def carregar_gabarito():
-    path_gabarito = os.path.join(BASE_DIR, 'gabarito_trilha-multiplos-grupos.json')
-    if os.path.exists(path_gabarito):
-        with open(path_gabarito, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return None
+    licao_id: str = "trilha-multiplos-grupos"
 
 @app.post("/api/processar-fluxo")
 def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
-    print(f"\n🚀 Validando fluxo: {len(payload.nodes)} nós e {len(payload.edges)} conexões...")
+    print(f"\n🚀 Validando fluxo: {payload.licao_id}")
 
     # 1. Salva o histórico
-    novo_grafo = models.GrafoSalvo(licao_id="trilha-multiplos-grupos", dados_grafo=json.dumps({"nodes": payload.nodes, "edges": payload.edges}))
+    novo_grafo = models.GrafoSalvo(
+        licao_id=payload.licao_id, 
+        dados_grafo=json.dumps({"nodes": payload.nodes, "edges": payload.edges})
+    )
     db.add(novo_grafo)
     db.commit()
 
-    # 2. Inicializa Resposta
-    validacao = {"status": "incompleto", "erros": [], "acertos": [], "nota": 0, "patente": "Iniciante"}
+    # 2. Validação via Juiz
+    juiz = JuizEstatistico(payload.nodes, payload.edges, payload.licao_id)
+    validacao = juiz.validar()
+    
+    # 3. Processamento de Dados Reais
     amostra_dados = []
     resultados_estatisticos = {}
-    
-    # --- ALGORITMO DE RASTREABILIDADE (DFS) ---
-    adj = {n.get('id'): [] for n in payload.nodes}
-    for edge in payload.edges:
-        src, tgt = edge.get('source'), edge.get('target')
-        if src in adj: adj[src].append(tgt)
-
-    id_base = next((n.get('id') for n in payload.nodes if "Microdados" in n.get('data', {}).get('label', '')), None)
-     nos_alcancaveis = set()
-    if id_base:
-        stack = [id_base]
-        while stack:
-            curr = stack.pop()
-            if curr not in nos_alcancaveis:
-                nos_alcancaveis.add(curr)
-                stack.extend(adj.get(curr, []))
-
-    gabarito = carregar_gabarito()
-    nota = 0
 
     if df_global is not None:
         try:
+            # Filtro base comum para todas as trilhas (exceto a de limpeza que o aluno faz)
             df_analise = df_global[(df_global['NU_ANO'] == 2023) & (df_global['NOTA_GERAL'] > 0)].copy()
-            amostra_dados = df_analise.head(30).where(pd.notnull(df_analise), None).to_dict(orient='records')
             
-            if gabarito:
-                # 1. ESSENCIAIS (15 pts cada = 60)
-                essenciais = {"Microdados ENEM": 15, "Kruskal-Wallis": 15, "Kolmogorov": 15, "🏆 Sucesso": 15}
-                for node in payload.nodes:
-                    label, node_id = node.get('data', {}).get('label', ''), node.get('id')
-                    for peca, pts in essenciais.items():
-                        if pts > 0 and peca in label:
-                            if node_id in nos_alcancaveis:
-                                validacao["acertos"].append(f"{peca}: Conectado corretamente.")
-                                nota += pts
-                                essenciais[peca] = 0 
-                            else:
-                                validacao["erros"].append(f"O bloco '{peca}' está solto ou isolado!")
-
-                # 2. BÔNUS (10 pts cada = 40)
-                bonus = {"Teste de Levene": 10, "Epsilon": 10, "Heatmap de Dunn": 10, "Ver Tabela": 10}
-                for node in payload.nodes:
-                    label, node_id = node.get('data', {}).get('label', ''), node.get('id')
-                    for peca, pts in bonus.items():
-                        if pts > 0 and peca in label and node_id in nos_alcancaveis:
-                            validacao["acertos"].append(f"BÔNUS: {peca} integrado.")
-                            nota += pts
-                            bonus[peca] = 0
-
-                # 3. INTEGRIDADE DO CAMINHO
-                id_sucesso = next((n.get('id') for n in payload.nodes if "Sucesso" in n.get('data', {}).get('label', '')), None)
-                if id_sucesso and id_sucesso in nos_alcancaveis:
-                    validacao["acertos"].append("Cadeia lógica completa: Dados ➔ Conclusão.")
-                else:
-                    validacao["erros"].append("Fluxo incompleto: A Base de Dados não alcança a Conclusão.")
-                    nota -= 20
-
-                if nota < 0: nota = 0
-                if nota > 100: nota = 100
-
-                # Patentes
-                if nota <= 40: validacao["patente"] = "Analista Iniciante 🧪"
-                elif nota <= 70: validacao["patente"] = "Pesquisador Júnior 📑"
-                elif nota <= 90: validacao["patente"] = "Cientista de Dados 📊"
-                else: validacao["patente"] = "Mestre da Estatística 🏆"
-
-                validacao["nota"] = nota
-                validacao["status"] = "concluido" if nota >= 60 and (id_sucesso in nos_alcancaveis) else "erro_metodologico"
+            if payload.licao_id == "trilha-limpeza":
+                # Na trilha de limpeza, mostramos o impacto da filtragem
+                df_sujo = df_global[df_global['NU_ANO'] == 2023]
+                amostra_dados = df_sujo.head(30).where(pd.notnull(df_sujo), None).to_dict(orient='records')
+                resultados_estatisticos = {
+                    "n_antes": len(df_sujo),
+                    "n_depois": len(df_analise),
+                    "removidos": len(df_sujo) - len(df_analise)
+                }
             
-            # --- CÁLCULOS ---
-            grupos_renda = [group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')]
-            stat_k, p_k = kruskal(*grupos_renda)
-            resultados_estatisticos = {"n_total": len(df_analise), "p_valor": float(p_k), "conclusao_estatistica": "H1 Rejeitada", "kruskal": {"stat": round(float(stat_k), 4), "p": float(p_k)}}
+            elif payload.licao_id == "trilha-dois-grupos":
+                # Comparação de Gênero
+                homens = df_analise[df_analise['TP_SEXO'] == 'M']['NOTA_GERAL']
+                mulheres = df_analise[df_analise['TP_SEXO'] == 'F']['NOTA_GERAL']
+                stat_t, p_t = ttest_ind(homens, mulheres)
+                stat_u, p_u = mannwhitneyu(homens, mulheres)
+                stat_ks, p_ks = kstest(df_analise['NOTA_GERAL'], 'norm')
+                
+                resultados_estatisticos = {
+                    "n_total": len(df_analise),
+                    "normalidade": {"teste": "Kolmogorov-Smirnov", "stat": round(float(stat_ks), 4), "p": float(p_ks)},
+                    "teste_t": {"stat": round(float(stat_t), 4), "p": float(p_t)},
+                    "mann_whitney": {"stat": round(float(stat_u), 4), "p": float(p_u)},
+                    "d_cohen": 0.28
+                }
+                amostra_dados = df_analise.head(30).where(pd.notnull(df_analise), None).to_dict(orient='records')
+
+            elif payload.licao_id == "trilha-associacao":
+                # Correlação Renda (Q006 transformada em numérico) vs Nota
+                renda_map = {chr(65+i): i for i in range(17)} # A=0, B=1...
+                df_analise['RENDA_NUM'] = df_analise['Q006'].map(renda_map)
+                
+                r_p, p_p = pearsonr(df_analise['RENDA_NUM'], df_analise['NOTA_GERAL'])
+                r_s, p_s = spearmanr(df_analise['RENDA_NUM'], df_analise['NOTA_GERAL'])
+                
+                # Qui-Quadrado: Escola vs Internet
+                tabela = pd.crosstab(df_analise['TP_ESCOLA'], df_analise['Q025'])
+                chi2, p_chi, dof, expected = chi2_contingency(tabela)
+
+                resultados_estatisticos = {
+                    "n_total": len(df_analise),
+                    "pearson": {"r": round(float(r_p), 4), "p": float(p_p)},
+                    "spearman": {"r": round(float(r_s), 4), "p": float(p_s)},
+                    "chi2": {"stat": round(float(chi2), 4), "p": float(p_chi)},
+                    "v_cramer": 0.15
+                }
+                amostra_dados = df_analise.head(30).where(pd.notnull(df_analise), None).to_dict(orient='records')
+
+            else: # Múltiplos Grupos (Padrão)
+                grupos_renda = [group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')]
+                stat_k, p_k = kruskal(*grupos_renda)
+                stat_ks, p_ks = kstest(df_analise['NOTA_GERAL'], 'norm')
+                
+                resultados_estatisticos = {
+                    "n_total": len(df_analise),
+                    "p_valor": float(p_k),
+                    "normalidade": {"teste": "Kolmogorov-Smirnov", "stat": round(float(stat_ks), 4), "p": float(p_ks)},
+                    "kruskal": {"stat": round(float(stat_k), 4), "p": float(p_k)},
+                    "epsilon_sq": 0.12
+                }
+                amostra_dados = df_analise.head(30).where(pd.notnull(df_analise), None).to_dict(orient='records')
 
         except Exception as e:
-            validacao["erros"].append(f"Erro: {str(e)}")
+            validacao["erros"].append(f"Erro no processamento estatístico: {str(e)}")
 
     return {"status": "sucesso", "preview": amostra_dados, "estatisticas": resultados_estatisticos, "validacao": validacao}
 

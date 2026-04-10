@@ -148,21 +148,46 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
         />
       );
     }
-    else if (lowerLabel.includes('epsilon') || lowerLabel.includes('tamanho')) {
-      const e = stats?.epsilon_sq || 0;
-      const interpretar = (val) => {
+    else if (lowerLabel.includes('epsilon') || lowerLabel.includes('tamanho') || lowerLabel.includes('eta') || lowerLabel.includes('cohen')) {
+      let valor = 0;
+      let nomeEfeito = "Tamanho do Efeito";
+      
+      if (lowerLabel.includes('epsilon')) { valor = stats?.epsilon_sq || 0; nomeEfeito = "Epsilon²"; }
+      else if (lowerLabel.includes('eta')) { valor = stats?.eta_sq || 0; nomeEfeito = "Eta²"; }
+      else if (lowerLabel.includes('cohen')) { valor = stats?.d_cohen || 0; nomeEfeito = "d de Cohen"; }
+
+      const interpretar = (val, tipo) => {
+        if (tipo.includes('cohen')) {
+            if (val < 0.2) return { t: "Muito Pequeno", c: "#94a3b8" };
+            if (val < 0.5) return { t: "Pequeno", c: "#3b82f6" };
+            if (val < 0.8) return { t: "Médio", c: "#f59e0b" };
+            return { t: "Grande", c: "#ef4444" };
+        }
         if (val < 0.01) return { t: "Desprezível", c: "#94a3b8" };
         if (val < 0.08) return { t: "Pequeno", c: "#3b82f6" };
         if (val < 0.26) return { t: "Médio", c: "#f59e0b" };
         return { t: "Grande", c: "#ef4444" };
       };
-      const res = interpretar(e);
+      const res = interpretar(valor, lowerLabel);
       conteudo = (
         <div style={{ textAlign: 'center', padding: '30px' }}>
-          <h3>Tamanho do Efeito (Epsilon²)</h3>
-          <div style={{ fontSize: '64px', fontWeight: 'bold', color: res.c, margin: '20px 0' }}>{e.toFixed(4)}</div>
+          <h3>{nomeEfeito}</h3>
+          <div style={{ fontSize: '64px', fontWeight: 'bold', color: res.c, margin: '20px 0' }}>{valor.toFixed(4)}</div>
           <div style={{ padding: '10px 25px', background: res.c, color: 'white', borderRadius: '50px', display: 'inline-block', fontWeight: 'bold' }}>Impacto {res.t}</div>
         </div>
+      );
+    }
+    else if (lowerLabel.includes('teste t') || lowerLabel.includes('mann-whitney')) {
+      const isT = lowerLabel.includes('teste t');
+      const s = isT ? stats?.teste_t : stats?.mann_whitney;
+      conteudo = (
+        <WidgetTesteEstatistico 
+          nome={isT ? "Teste T (Student)" : "Teste de Mann-Whitney"}
+          estatistica={`${isT ? 't' : 'U'} = ${s?.stat || "0.00"}`}
+          pValor={s?.p || 0}
+          interpretacao={s?.p < 0.05 ? "Diferença Significativa entre os grupos!" : "Sem diferença significativa comprovada."}
+          cor={isT ? "#ef4444" : "#16a34a"}
+        />
       );
     }
     else if (lowerLabel.includes('dunn') || lowerLabel.includes('tukey')) {
@@ -241,7 +266,7 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
   const submitHypothesis = async () => {
     setEnviando(true);
     try {
-      const response = await enviarGrafoParaProcessamento(nodes, edges);
+      const response = await enviarGrafoParaProcessamento(nodes, edges, licaoId);
       console.log("✅ Resposta do Servidor:", response);
 
       if (response.preview) {
@@ -354,13 +379,16 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
         <Tooltip conceito="Ponto de decisão: os dados seguem uma distribuição normal?" quando="Após rodar o Shapiro-Wilk ou K-S, para escolher o caminho certo."><button onClick={() => addBlock('É Normal?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: É Normal?</button></Tooltip>
         <Tooltip conceito="Teste paramétrico que compara as médias de 3 ou mais grupos." quando="Os dados forem normalmente distribuídos e as variâncias forem homogêneas."><button onClick={() => addBlock('🧮 ANOVA', '#ef4444', 'tool', '🧮')} style={UI_STYLES.btnStyle}>+ ANOVA</button></Tooltip>
         <Tooltip conceito="Alternativa não-paramétrica à ANOVA, baseada em postos (ranks)." quando="Os dados não forem normais — caso do ENEM com N muito grande."><button onClick={() => addBlock('🧮 Kruskal-Wallis', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Kruskal-Wallis</button></Tooltip>
+        <Tooltip conceito="Teste paramétrico para comparar as médias de APENAS DOIS grupos (ex: Homens vs Mulheres)." quando="Os dados forem normais e você tiver apenas dois grupos para comparar."><button onClick={() => addBlock('🧮 Teste T', '#ef4444', 'tool', '⚖️')} style={UI_STYLES.btnStyle}>+ Teste T (2 Grupos)</button></Tooltip>
+        <Tooltip conceito="Teste não-paramétrico para comparar dois grupos independentes." quando="Os dados de dois grupos NÃO forem normais — muito comum no ENEM."><button onClick={() => addBlock('🧮 Mann-Whitney', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Mann-Whitney</button></Tooltip>
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>4. SIGNIFICÂNCIA</h4>
-        <Tooltip conceito="Ponto de decisão: o p-valor do teste foi menor que 0,05?" quando="Após rodar a ANOVA ou Kruskal-Wallis para checar se há diferença real."><button onClick={() => addBlock('P < 0.05?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: P-valor &lt; 0.05?</button></Tooltip>
+        <Tooltip conceito="Ponto de decisão: o p-valor do teste foi menor que 0,05?" quando="Após rodar o teste de inferência para checar se há diferença real."><button onClick={() => addBlock('P < 0.05?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: P-valor &lt; 0.05?</button></Tooltip>
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>5. TAMANHO DO EFEITO</h4>
         <Tooltip conceito="Mede a magnitude da diferença encontrada pelo Kruskal-Wallis." quando="Após confirmar significância (p &lt; 0.05) usando o caminho não-paramétrico."><button onClick={() => addBlock('📏 Epsilon²', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ Epsilon-Squared</button></Tooltip>
         <Tooltip conceito="Mede a magnitude da diferença encontrada pela ANOVA." quando="Após confirmar significância (p &lt; 0.05) usando o caminho paramétrico."><button onClick={() => addBlock('📏 Eta²', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ Eta-Squared</button></Tooltip>
+        <Tooltip conceito="Mede a magnitude da diferença entre dois grupos em unidades de desvio padrão." quando="Após testes de dois grupos (Teste T ou Mann-Whitney) significativos."><button onClick={() => addBlock('📏 d de Cohen', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ d de Cohen</button></Tooltip>
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>6. POST-HOC</h4>
         <Tooltip conceito="Identifica quais pares de grupos são estatisticamente diferentes." quando="Após o Kruskal-Wallis ser significativo, para saber quem difere de quem."><button onClick={() => addBlock('🔥 Heatmap de Dunn', '#d97706', 'tool', '🔥')} style={UI_STYLES.btnStyle}>+ Teste de Dunn</button></Tooltip>

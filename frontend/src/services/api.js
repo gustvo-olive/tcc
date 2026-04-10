@@ -6,14 +6,14 @@
 
 const API_BASE_URL = 'http://127.0.0.1:5000/api';
 
-export const enviarGrafoParaProcessamento = async (nodes, edges) => {
+export const enviarGrafoParaProcessamento = async (nodes, edges, licaoId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/processar-fluxo`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ nodes, edges }),
+      body: JSON.stringify({ nodes, edges, licao_id: licaoId }),
     });
 
     if (!response.ok) {
