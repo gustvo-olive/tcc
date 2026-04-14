@@ -70,42 +70,52 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
   );
 
   // Componente de Boxplot
-  const BoxPlotRenda = ({ dados, colunaNota }) => {
+  // Boxplot Dinâmico (Adaptativo para Renda ou Sexo)
+  const DynamicBoxPlot = ({ dados, groupKey }) => {
     if (!dados || dados.length === 0) return <p>Sem dados.</p>;
-    const categoriasENEM = Object.keys(DIC_RENDA_COMPLETO).sort();
+    
+    const DIC_SEXO = { 'M': 'Masculino', 'F': 'Feminino' };
+    
+    // Agrupar dados e calcular estatísticas
     const grupos = {};
     dados.forEach(d => {
-      const cat = d['Q006'] || 'Q';
-      if (!grupos[cat]) grupos[cat] = [];
-      if (d[colunaNota]) grupos[cat].push(d[colunaNota]);
+      const val = d[groupKey];
+      if (val === null || val === undefined) return;
+      if (!grupos[val]) grupos[val] = [];
+      if (d['NOTA_GERAL']) grupos[val].push(d['NOTA_GERAL']);
     });
 
+    // Ordenar categorias existentes (remove vazias)
+    const categoriasAtivas = Object.keys(grupos).sort();
+    
     return (
       <div style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-        <h4 style={{ color: '#1e293b', marginBottom: '20px' }}>📊 Distribuição de {colunaNota} por Renda</h4>
+        <h4 style={{ color: '#1e293b', marginBottom: '20px' }}>📊 Distribuição por {groupKey === 'TP_SEXO' ? 'Sexo' : 'Renda'}</h4>
         <div style={{ overflowX: 'auto', paddingBottom: '20px' }}>
-          <div style={{ minWidth: '850px', height: '300px', position: 'relative', display: 'flex', alignItems: 'flex-end', paddingLeft: '50px', borderLeft: '2px solid #cbd5e1', borderBottom: '2px solid #cbd5e1' }}>
+          <div style={{ minWidth: Math.max(categoriasAtivas.length * 60, 400) + 'px', height: '300px', position: 'relative', display: 'flex', alignItems: 'flex-end', paddingLeft: '50px', borderLeft: '2px solid #cbd5e1', borderBottom: '2px solid #cbd5e1' }}>
             {[0, 250, 500, 750, 1000].map(val => (
               <div key={val} style={{ position: 'absolute', bottom: `${val * 0.25}px`, left: '-45px', width: '100%', borderTop: '1px dashed #e2e8f0', display: 'flex' }}>
                 <span style={{ fontSize: '10px', color: '#94a3b8' }}>{val}</span>
               </div>
             ))}
-            {categoriasENEM.map(cat => {
-              const notas = (grupos[cat] || []).sort((a, b) => a - b);
-              if (notas.length === 0) return <div key={cat} style={{ flex: 1 }}></div>;
+            {categoriasAtivas.map(cat => {
+              const notas = grupos[cat].sort((a, b) => a - b);
+              if (notas.length === 0) return null;
               const q1 = notas[Math.floor(notas.length * 0.25)];
               const median = notas[Math.floor(notas.length * 0.5)];
               const q3 = notas[Math.floor(notas.length * 0.75)];
               const min = notas[0];
               const max = notas[notas.length - 1];
+              const label = groupKey === 'TP_SEXO' ? (DIC_SEXO[cat] || cat) : cat;
+              
               return (
                 <div key={cat} style={{ flex: 1, height: '100%', position: 'relative', display: 'flex', justifyContent: 'center' }}>
                   <div style={{ width: '1px', background: '#475569', height: `${(max - min) * 0.25}px`, position: 'absolute', bottom: `${min * 0.25}px` }}></div>
-                  <div style={{ width: '25px', background: 'rgba(99, 102, 241, 0.8)', border: '1px solid #4338ca', height: `${(q3 - q1) * 0.25}px`, position: 'absolute', bottom: `${q1 * 0.25}px`, zIndex: 2 }}>
+                  <div style={{ width: '30px', background: groupKey === 'TP_SEXO' ? (cat === 'M' ? '#3b82f6' : '#ec4899') : 'rgba(99, 102, 241, 0.8)', border: '1px solid #4338ca', height: `${(q3 - q1) * 0.25}px`, position: 'absolute', bottom: `${q1 * 0.25}px`, zIndex: 2 }}>
                     <div style={{ width: '100%', height: '2px', background: 'white', position: 'absolute', top: `${(q3 - median) * 0.25}px` }}></div>
                   </div>
-                  <div style={{ position: 'absolute', bottom: '-60px', width: '80px', textAlign: 'right', transform: 'rotate(-45deg)', fontSize: '9px' }}>
-                    <strong>{cat}</strong>: {DIC_RENDA_COMPLETO[cat].split(':')[1]}
+                  <div style={{ position: 'absolute', bottom: '-40px', textAlign: 'center', fontSize: '10px', fontWeight: 'bold' }}>
+                    {label}
                   </div>
                 </div>
               );
@@ -124,88 +134,163 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
       conteudo = <DataTable data={dadosAtuais} />;
     } 
     else if (lowerLabel.includes('distribuição') || lowerLabel.includes('boxplot')) {
-      conteudo = <BoxPlotRenda dados={dadosAtuais} colunaNota="NOTA_GERAL" />;
+      conteudo = <DynamicBoxPlot dados={dadosAtuais} groupKey={stats?.boxplot_group || 'Q006'} />;
     }
     else if (lowerLabel.includes('shapiro') || lowerLabel.includes('kolmogorov')) {
+      const isKS = lowerLabel.includes('kolmogorov');
+      const s = isKS ? stats?.ks : stats?.shapiro;
       conteudo = (
         <WidgetTesteEstatistico 
-          nome={stats?.normalidade?.teste || "Teste de Normalidade"}
-          estatistica={`W/D = ${stats?.normalidade?.stat || "0.00"}`}
-          pValor={stats?.normalidade?.p || 0}
-          interpretacao={stats?.normalidade?.p < 0.05 ? "Distribuição Não-Normal. Siga para caminhos não-paramétricos." : "Distribuição Normal. Pode usar ANOVA."}
-          cor="#8b5cf6"
+          nome={isKS ? "Kolmogorov-Smirnov (Grandes Amostras)" : "Shapiro-Wilk (Pequenas Amostras)"}
+          estatistica={`Estatística = ${s?.stat || "0.00"}`}
+          pValor={s?.p || 0}
+          interpretacao={s?.p < 0.05 ? "Distribuição NÃO é Normal (P < 0.05). Siga para caminhos não-paramétricos." : "Distribuição segue a curva Normal (P > 0.05). Você pode usar testes paramétricos."}
+          cor={isKS ? "#8b5cf6" : "#a855f7"}
         />
       );
     }
     else if (lowerLabel.includes('levene')) {
       conteudo = (
         <WidgetTesteEstatistico 
-          nome="Teste de Levene"
+          nome="Teste de Levene (Variância)"
           estatistica={`F = ${stats?.levene?.stat || "0.00"}`}
           pValor={stats?.levene?.p || 0}
-          interpretacao={stats?.levene?.p < 0.05 ? "Variâncias Heterogêneas." : "Variâncias Homogêneas atendidas!"}
+          interpretacao={stats?.levene?.p < 0.05 ? "Variâncias Heterogêneas (Desiguais). Use testes robustos ou não-paramétricos." : "Variâncias Homogêneas (Iguais). Pressuposto para ANOVA/Teste T atendido!"}
           cor="#f97316"
         />
       );
     }
-    else if (lowerLabel.includes('epsilon') || lowerLabel.includes('tamanho') || lowerLabel.includes('eta') || lowerLabel.includes('cohen')) {
+    else if (lowerLabel.includes('epsilon') || lowerLabel.includes('tamanho') || lowerLabel.includes('eta') || lowerLabel.includes('cohen') || lowerLabel.includes('cramer')) {
       let valor = 0;
       let nomeEfeito = "Tamanho do Efeito";
       
       if (lowerLabel.includes('epsilon')) { valor = stats?.epsilon_sq || 0; nomeEfeito = "Epsilon²"; }
       else if (lowerLabel.includes('eta')) { valor = stats?.eta_sq || 0; nomeEfeito = "Eta²"; }
       else if (lowerLabel.includes('cohen')) { valor = stats?.d_cohen || 0; nomeEfeito = "d de Cohen"; }
+      else if (lowerLabel.includes('cramer')) { valor = stats?.v_cramer || 0; nomeEfeito = "V de Cramer"; }
 
       const interpretar = (val, tipo) => {
+        val = Math.abs(val);
         if (tipo.includes('cohen')) {
-            if (val < 0.2) return { t: "Muito Pequeno", c: "#94a3b8" };
+            if (val < 0.2) return { t: "Inexpressivo", c: "#94a3b8" };
             if (val < 0.5) return { t: "Pequeno", c: "#3b82f6" };
             if (val < 0.8) return { t: "Médio", c: "#f59e0b" };
             return { t: "Grande", c: "#ef4444" };
         }
-        if (val < 0.01) return { t: "Desprezível", c: "#94a3b8" };
-        if (val < 0.08) return { t: "Pequeno", c: "#3b82f6" };
-        if (val < 0.26) return { t: "Médio", c: "#f59e0b" };
-        return { t: "Grande", c: "#ef4444" };
+        if (val < 0.1) return { t: "Desprezível", c: "#94a3b8" };
+        if (val < 0.3) return { t: "Fraco", c: "#3b82f6" };
+        if (val < 0.5) return { t: "Moderado", c: "#f59e0b" };
+        return { t: "Forte", c: "#ef4444" };
       };
       const res = interpretar(valor, lowerLabel);
       conteudo = (
         <div style={{ textAlign: 'center', padding: '30px' }}>
-          <h3>{nomeEfeito}</h3>
-          <div style={{ fontSize: '64px', fontWeight: 'bold', color: res.c, margin: '20px 0' }}>{valor.toFixed(4)}</div>
+          <h3 style={{ color: '#64748b', margin: 0 }}>{nomeEfeito} (Magnitude)</h3>
+          <div style={{ fontSize: '72px', fontWeight: 'bold', color: res.c, margin: '15px 0' }}>{valor.toFixed(4)}</div>
           <div style={{ padding: '10px 25px', background: res.c, color: 'white', borderRadius: '50px', display: 'inline-block', fontWeight: 'bold' }}>Impacto {res.t}</div>
+          
+          {lowerLabel.includes('cohen') && (
+            <div style={{ marginTop: '30px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+               <h4 style={{ color: '#475569', fontSize: '14px', marginBottom: '10px' }}>📏 Tabela de Referência (Cohen):</h4>
+               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', fontSize: '11px' }}>
+                  <div style={{ padding: '5px', background: valor < 0.2 ? '#f1f5f9' : 'transparent', border: valor < 0.2 ? '1px solid #cbd5e1' : 'none' }}>0.2: Pequeno</div>
+                  <div style={{ padding: '5px', background: (valor >= 0.2 && valor < 0.5) ? '#f1f5f9' : 'transparent', border: (valor >= 0.2 && valor < 0.5) ? '1px solid #cbd5e1' : 'none' }}>0.5: Médio</div>
+                  <div style={{ padding: '5px', background: (valor >= 0.5) ? '#f1f5f9' : 'transparent', border: (valor >= 0.5) ? '1px solid #cbd5e1' : 'none' }}>0.8: Grande</div>
+               </div>
+            </div>
+          )}
         </div>
       );
     }
-    else if (lowerLabel.includes('teste t') || lowerLabel.includes('mann-whitney')) {
-      const isT = lowerLabel.includes('teste t');
-      const s = isT ? stats?.teste_t : stats?.mann_whitney;
+    else if (lowerLabel.includes('teste t') || lowerLabel.includes('mann-whitney') || lowerLabel.includes('kruskal') || lowerLabel.includes('anova')) {
+      let s = null;
+      let nome = "Teste de Hipótese";
+      let cor = "#6366f1";
+      
+      if (lowerLabel.includes('teste t')) { s = stats?.teste_t; nome = "Teste T (Student)"; cor = "#ef4444"; }
+      else if (lowerLabel.includes('mann-whitney')) { s = stats?.mann_whitney; nome = "Mann-Whitney U"; cor = "#16a34a"; }
+      else if (lowerLabel.includes('kruskal')) { s = stats?.kruskal; nome = "Kruskal-Wallis"; cor = "#10b981"; }
+      else if (lowerLabel.includes('anova')) { s = stats?.anova; nome = "ANOVA (F)"; cor = "#ef4444"; }
+
       conteudo = (
         <WidgetTesteEstatistico 
-          nome={isT ? "Teste T (Student)" : "Teste de Mann-Whitney"}
-          estatistica={`${isT ? 't' : 'U'} = ${s?.stat || "0.00"}`}
+          nome={nome}
+          estatistica={`Estatística = ${s?.stat || "0.00"}`}
           pValor={s?.p || 0}
-          interpretacao={s?.p < 0.05 ? "Diferença Significativa entre os grupos!" : "Sem diferença significativa comprovada."}
-          cor={isT ? "#ef4444" : "#16a34a"}
+          interpretacao={s?.p < 0.05 ? "Diferença SIGNIFICATIVA (P < 0.05). Rejeitamos H0." : "Sem diferença significativa (P > 0.05). Aceitamos H0."}
+          cor={cor}
+        />
+      );
+    }
+    else if (lowerLabel.includes('pearson') || lowerLabel.includes('spearman')) {
+      const isP = lowerLabel.includes('pearson');
+      const s = isP ? stats?.pearson : stats?.spearman;
+      conteudo = (
+        <div style={{ textAlign: 'center', padding: '30px' }}>
+          <h3>Correlação de {isP ? 'Pearson (r)' : 'Spearman (ρ)'}</h3>
+          <div style={{ fontSize: '64px', fontWeight: 'bold', color: '#6366f1', margin: '20px 0' }}>{s?.r || "0.00"}</div>
+          <p>P-valor: <strong>{s?.p?.toFixed(4) || "0.0000"}</strong></p>
+          <div style={{ marginTop: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px' }}>
+            {Math.abs(s?.r) > 0.5 ? "🚀 Correlação Forte!" : "🐌 Correlação Fraca."}
+            <br />
+            {s?.r > 0 ? "📈 Relação Positiva (ambas crescem)." : "📉 Relação Negativa."}
+          </div>
+        </div>
+      );
+    }
+    else if (lowerLabel.includes('qui-quadrado')) {
+      conteudo = (
+        <WidgetTesteEstatistico 
+          nome="Teste Qui-Quadrado (χ²)"
+          estatistica={`χ² = ${stats?.chi2?.stat || "0.00"}`}
+          pValor={stats?.chi2?.p || 0}
+          interpretacao={stats?.chi2?.p < 0.05 ? "Associação Significativa entre as categorias!" : "Variáveis Independentes (sem associação)."}
+          cor="#d97706"
         />
       );
     }
     else if (lowerLabel.includes('dunn') || lowerLabel.includes('tukey')) {
+      const map = stats?.dunn_map || {};
       conteudo = (
-        <div style={{ textAlign: 'center', padding: '20px' }}>
-          <h3>Post-Hoc: Mapa de Diferenças</h3>
-          <div style={{ height: '200px', background: '#f1f5f9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            [Heatmap de Significância Real]
+        <div style={{ padding: '10px' }}>
+          <h3 style={{ textAlign: 'center', color: '#1e293b' }}>{lowerLabel.includes('dunn') ? 'Post-Hoc de Dunn' : 'Post-Hoc de Tukey'}</h3>
+          <p style={{ fontSize: '13px', color: '#64748b', textAlign: 'center', marginBottom: '20px' }}>Comparações par-a-par detalhadas:</p>
+          
+          <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead style={{ background: '#f8fafc', position: 'sticky', top: 0 }}>
+                <tr>
+                  <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>Pares Comparados</th>
+                  <th style={{ padding: '12px', textAlign: 'right', borderBottom: '2px solid #e2e8f0' }}>P-Valor</th>
+                  <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #e2e8f0' }}>Sig.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.keys(map).length > 0 ? Object.entries(map).map(([par, p], i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#fcfcfc', borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '10px', color: '#475569' }}>{par}</td>
+                    <td style={{ padding: '10px', textAlign: 'right', fontWeight: 'bold', color: p < 0.05 ? '#ef4444' : '#10b981' }}>{p.toFixed(4)}</td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>{p < 0.05 ? '✅' : '❌'}</td>
+                  </tr>
+                )) : (
+                  <tr><td colSpan="3" style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>Nenhum dado processado.</td></tr>
+                )}
+              </tbody>
+            </table>
           </div>
-          <p style={{ marginTop: '10px', fontSize: '13px' }}>Cores escuras indicam que os pares de renda são estatisticamente diferentes.</p>
+          <p style={{ marginTop: '15px', fontSize: '11px', color: '#94a3b8' }}>✅ = Diferença estatisticamente significativa (P &lt; 0.05).</p>
         </div>
       );
     }
     else if (lowerLabel.includes('contar') || lowerLabel.includes('n')) {
+      const nTotal = (stats && stats.n_total) ? stats.n_total.toLocaleString() : (dadosAtuais ? dadosAtuais.length : 0);
       conteudo = (
         <div style={{ textAlign: 'center', padding: '30px' }}>
-           <h2 style={{ fontSize: '48px' }}>N = {stats?.n_total?.toLocaleString() || dadosAtuais.length}</h2>
-           <p>Alunos analisados em 2023</p>
+           <h2 style={{ fontSize: '56px', fontWeight: '900', color: '#1e293b' }}>N = {nTotal}</h2>
+           <p style={{ fontSize: '18px', color: '#64748b' }}>Alunos analisados na amostra 2023</p>
+           <div style={{ marginTop: '20px', height: '10px', width: '100%', background: '#e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: '100%', background: '#3b82f6' }}></div>
+           </div>
         </div>
       );
     }

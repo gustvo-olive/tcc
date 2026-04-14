@@ -54,93 +54,152 @@ class JuizEstatistico:
             try:
                 with open(path_gabarito, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    # Se o JSON for o formato do React Flow, extraímos apenas os pesos
-                    if "nodes" in data and isinstance(data["nodes"], list):
+                    if "nodes" in data:
                         return self._extrair_pesos_do_flow_json(data)
                     return data
             except: pass
 
-        # Padrões Internos (Andaime de Segurança)
+        # Padrões de Segurança (Caso o JSON falhe ou não exista)
+        # Seguem a nova lógica: Críticos (20), Essenciais (10), Suporte (5)
         defaults = {
             "trilha-multiplos-grupos": {
-                "essenciais": {"Microdados": 15, "Kolmogorov": 15, "Kruskal-Wallis": 15, "🏆 Sucesso": 15},
-                "bonus": {"Levene": 10, "Epsilon": 10, "Dunn": 10, "Tabela": 10}
+                "lista_labels": ["📊 Microdados ENEM", "⚖️ Kolmogorov-Smirnov", "⚖️ Teste de Levene", "🧮 Kruskal-Wallis", "📏 Epsilon²", "🏆 Sucesso"],
+                "pesos": {"📊 Microdados ENEM": 10, "⚖️ Kolmogorov-Smirnov": 10, "⚖️ Teste de Levene": 10, "🧮 Kruskal-Wallis": 20, "📏 Epsilon²": 5, "🏆 Sucesso": 10},
+                "precedencias": {"🧮 Kruskal-Wallis": ["⚖️ Teste de Levene"], "🏆 Sucesso": ["🧮 Kruskal-Wallis"]},
+                "soma_total_pesos": 65
             },
             "trilha-dois-grupos": {
-                "essenciais": {"Microdados": 15, "Kolmogorov": 15, "Mann-Whitney": 15, "🏆 Sucesso": 15},
-                "bonus": {"Levene": 10, "d de Cohen": 10, "Teste T": 10, "Tabela": 10}
-            },
-            "trilha-associacao": {
-                "essenciais": {"Microdados": 15, "Pearson": 10, "Spearman": 10, "Qui-Quadrado": 15, "🏆 Sucesso": 10},
-                "bonus": {"V de Cramer": 10, "Boxplot": 10, "Tabela": 10}
-            },
-            "trilha-limpeza": {
-                "essenciais": {"Microdados": 30, "Tabela": 30, "Contar N": 40},
-                "bonus": {}
+                "lista_labels": ["📊 Microdados ENEM", "⚖️ Kolmogorov-Smirnov", "🧮 Mann-Whitney", "📏 d de Cohen", "🏆 Sucesso"],
+                "pesos": {"📊 Microdados ENEM": 10, "⚖️ Kolmogorov-Smirnov": 10, "🧮 Mann-Whitney": 20, "📏 d de Cohen": 5, "🏆 Sucesso": 10},
+                "precedencias": {"🧮 Mann-Whitney": ["⚖️ Kolmogorov-Smirnov"], "🏆 Sucesso": ["🧮 Mann-Whitney"]},
+                "soma_total_pesos": 55
             }
         }
         return defaults.get(self.licao_id, defaults["trilha-multiplos-grupos"])
 
     def _extrair_pesos_do_flow_json(self, flow_data: Dict) -> Dict:
-        """ Converte um export do React Flow em um formato de pesos para o Juiz """
-        # Lógica simplificada: cada nó de ferramenta vale um pouco
-        pesos = {"essenciais": {}, "bonus": {}}
+        """ Extrai labels, dependências e atribui pesos por importância """
+        nos_esperados = {} # id -> label
+        mapeamento_pesos = {} # id -> peso (para garantir soma correta)
+        
+        # Categorias de peso
+        CRITICOS = ["teste t", "mann-whitney", "anova", "kruskal", "pearson", "qui-quadrado"]
+        ESSENCIAIS = ["microdados", "base", "kolmogorov", "shapiro", "levene", "sucesso", "normal?", "n > 5000?"]
+        
         for node in flow_data["nodes"]:
             label = node.get('data', {}).get('label', '')
-            if any(x in label for x in ["Microdados", "Kruskal", "ANOVA", "Sucesso", "Pearson", "Qui-Quadrado"]):
-                pesos["essenciais"][label] = 15
-            else:
-                pesos["bonus"][label] = 10
-        return pesos
+            if label and "🎯" not in label and "DESAFIO" not in label:
+                nid = node['id']
+                nos_esperados[nid] = label
+                
+                # Atribuição de peso baseada no tipo de ferramenta
+                lower_label = label.lower()
+                peso = 5 # Suporte por padrão
+                if any(c in lower_label for c in CRITICOS): peso = 20
+                elif any(e in lower_label for e in ESSENCIAIS): peso = 10
+                
+                mapeamento_pesos[nid] = peso
+
+        # Mapear Precedência
+        precedencias = {}
+        for edge in flow_data["edges"]:
+            src, tgt = edge['source'], edge['target']
+            if tgt in nos_esperados:
+                label_pai = nos_esperados.get(src)
+                if label_pai:
+                    if nos_esperados[tgt] not in precedencias:
+                        precedencias[nos_esperados[tgt]] = []
+                    precedencias[nos_esperados[tgt]].append(label_pai)
+        
+        return {
+            "lista_labels": list(nos_esperados.values()),
+            "precedencias": precedencias,
+            "mapeamento_pesos": list(mapeamento_pesos.values()),
+            "soma_total_pesos": sum(mapeamento_pesos.values())
+        }
 
     def validar(self) -> Dict[str, Any]:
         acertos = []
         erros = []
         alertas = []
-        nota = 0
+        pontos_aluno = 0
         
         if not self.id_base:
             return {"status": "erro_metodologico", "nota": 0, "erros": ["Base de Dados não encontrada!"], "patente": "Iniciante 🧪"}
 
         config = self.carregar_config_gabarito()
+        lista_labels_esperadas = config.get("lista_labels", [])
+        precedencias = config.get("precedencias", {})
+        pesos_lista = config.get("mapeamento_pesos", [])
+        soma_total_gabarito = config.get("soma_total_pesos", 0)
 
-        # Validar Essenciais
-        for label_key, pts in config.get("essenciais", {}).items():
-            node_id = self._find_node_id_by_label(label_key)
-            if node_id:
-                if node_id in self.nos_alcancaveis:
-                    nota += pts
-                    acertos.append(f"✓ {label_key} conectado.")
-                else:
-                    erros.append(f"✗ O bloco '{label_key}' está solto!")
-            else:
-                alertas.append(f"! Falta o bloco: {label_key}")
+        adj_inversa_aluno = {n['id']: [] for n in self.nodes}
+        for edge in self.edges:
+            adj_inversa_aluno[edge['target']].append(edge['source'])
 
-        # Validar Bônus
-        for label_key, pts in config.get("bonus", {}).items():
-            node_id = self._find_node_id_by_label(label_key)
-            if node_id and node_id in self.nos_alcancaveis:
-                nota += pts
-                acertos.append(f"✓ BÔNUS: {label_key} integrado.")
+        ids_computados_aluno = set()
 
-        # Penalidade de Desconexão (Caminho para o Sucesso)
-        id_sucesso = self._find_node_id_by_label("Sucesso") or self._find_node_id_by_label("H0")
+        # Percorrer o CHECKLIST do GABARITO (usando zip para manter o peso atrelado à posição)
+        for i, label_esperada in enumerate(lista_labels_esperadas):
+            encontrou_correto = False
+            peso_deste_bloco = pesos_lista[i] if i < len(pesos_lista) else 5
+            
+            for node in self.nodes:
+                node_label = node.get('data', {}).get('label', '')
+                node_id = node['id']
+                
+                if label_esperada.lower() in node_label.lower() and node_id not in ids_computados_aluno:
+                    
+                    # 1. Verificar Conexão
+                    if node_id not in self.nos_alcancaveis:
+                        erros.append(f"✗ O bloco '{label_esperada}' está solto!")
+                        encontrou_correto = True 
+                        break
+                    
+                    # 2. Verificar Precedência (Ordem Lógica)
+                    pais_esperados = precedencias.get(label_esperada, [])
+                    if pais_esperados:
+                        ids_pais_reais = adj_inversa_aluno.get(node_id, [])
+                        labels_pais_reais = [next((n.get('data', {}).get('label', '').lower() for n in self.nodes if n['id'] == pid), '') for pid in ids_pais_reais]
+                        
+                        if not any(any(p_esp.lower() in pr for pr in labels_pais_reais) for p_esp in pais_esperados):
+                            erros.append(f"⚖️ Rigor: '{label_esperada}' foi conectado fora de ordem!")
+                            encontrou_correto = True
+                            break
+
+                    # Sucesso no Bloco!
+                    pontos_aluno += peso_deste_bloco
+                    acertos.append(f"✓ {label_esperada}")
+                    ids_computados_aluno.add(node_id)
+                    encontrou_correto = True
+                    break
+            
+            if not encontrou_correto:
+                alertas.append(f"! Falta o bloco: {label_esperada}")
+
+        # Cálculo da PORCENTAGEM REAL
+        nota_percentual = int((pontos_aluno / soma_total_gabarito) * 100) if soma_total_gabarito > 0 else 0
+        
+        # Teto de Segurança
+        nota_percentual = min(nota_percentual, 100)
+
+        # Penalidade Crítica: Se não chegar ao Sucesso, teto de 30%
+        id_sucesso = self._find_node_id_by_label("Sucesso")
         if not id_sucesso or id_sucesso not in self.nos_alcancaveis:
-            if self.licao_id != "trilha-limpeza":
-                erros.append("Fluxo não alcança uma conclusão válida.")
-                nota = min(nota, 30)
-
-        # Patente
-        patente = "Analista Iniciante 🧪"
-        if nota > 90: patente = "Mestre da Estatística 🏆"
-        elif nota > 70: patente = "Cientista de Dados 📊"
-        elif nota > 40: patente = "Pesquisador Júnior 📑"
+            nota_percentual = min(nota_percentual, 30)
+            erros.append("Pipeline incompleto: O fluxo não conclui com o nó de Sucesso.")
 
         return {
-            "status": "concluido" if nota >= 60 else "erro_metodologico",
-            "nota": min(nota, 100),
+            "status": "concluido" if nota_percentual >= 60 else "erro_metodologico",
+            "nota": nota_percentual,
             "acertos": acertos,
             "erros": erros,
             "alertas": alertas,
-            "patente": patente
+            "patente": self._get_patente(nota_percentual)
         }
+
+    def _get_patente(self, nota: int) -> str:
+        if nota >= 95: return "Mestre da Estatística 🏆"
+        if nota >= 70: return "Cientista de Dados 📊"
+        if nota >= 40: return "Pesquisador Júnior 📑"
+        return "Analista Iniciante 🧪"

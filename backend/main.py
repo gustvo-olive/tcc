@@ -84,51 +84,74 @@ def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
                 # Comparação de Gênero
                 homens = df_analise[df_analise['TP_SEXO'] == 'M']['NOTA_GERAL']
                 mulheres = df_analise[df_analise['TP_SEXO'] == 'F']['NOTA_GERAL']
+                
+                # Testes de Normalidade Reais (Corrigido K-S)
+                mu, std = df_analise['NOTA_GERAL'].mean(), df_analise['NOTA_GERAL'].std()
+                stat_ks, p_ks = kstest(df_analise['NOTA_GERAL'], 'norm', args=(mu, std))
+                
+                amostra_shapiro = df_analise['NOTA_GERAL'].sample(min(len(df_analise), 5000))
+                stat_sw, p_sw = shapiro(amostra_shapiro)
+                
+                stat_lev, p_lev = levene(homens, mulheres)
                 stat_t, p_t = ttest_ind(homens, mulheres)
                 stat_u, p_u = mannwhitneyu(homens, mulheres)
-                stat_ks, p_ks = kstest(df_analise['NOTA_GERAL'], 'norm')
                 
+                # d de Cohen
+                n1, n2 = len(homens), len(mulheres)
+                s1, s2 = homens.var(), mulheres.var()
+                pooled_std = np.sqrt(((n1-1)*s1 + (n2-1)*s2) / (n1+n2-2)) if (n1+n2-2) > 0 else 1
+                d_cohen = (homens.mean() - mulheres.mean()) / pooled_std
+
                 resultados_estatisticos = {
                     "n_total": len(df_analise),
-                    "normalidade": {"teste": "Kolmogorov-Smirnov", "stat": round(float(stat_ks), 4), "p": float(p_ks)},
+                    "ks": {"stat": round(float(stat_ks), 4), "p": float(p_ks)},
+                    "shapiro": {"stat": round(float(stat_sw), 4), "p": float(p_sw)},
+                    "levene": {"stat": round(float(stat_lev), 4), "p": float(p_lev)},
                     "teste_t": {"stat": round(float(stat_t), 4), "p": float(p_t)},
                     "mann_whitney": {"stat": round(float(stat_u), 4), "p": float(p_u)},
-                    "d_cohen": 0.28
-                }
-                amostra_dados = df_analise.head(30).where(pd.notnull(df_analise), None).to_dict(orient='records')
-
-            elif payload.licao_id == "trilha-associacao":
-                # Correlação Renda (Q006 transformada em numérico) vs Nota
-                renda_map = {chr(65+i): i for i in range(17)} # A=0, B=1...
-                df_analise['RENDA_NUM'] = df_analise['Q006'].map(renda_map)
-                
-                r_p, p_p = pearsonr(df_analise['RENDA_NUM'], df_analise['NOTA_GERAL'])
-                r_s, p_s = spearmanr(df_analise['RENDA_NUM'], df_analise['NOTA_GERAL'])
-                
-                # Qui-Quadrado: Escola vs Internet
-                tabela = pd.crosstab(df_analise['TP_ESCOLA'], df_analise['Q025'])
-                chi2, p_chi, dof, expected = chi2_contingency(tabela)
-
-                resultados_estatisticos = {
-                    "n_total": len(df_analise),
-                    "pearson": {"r": round(float(r_p), 4), "p": float(p_p)},
-                    "spearman": {"r": round(float(r_s), 4), "p": float(p_s)},
-                    "chi2": {"stat": round(float(chi2), 4), "p": float(p_chi)},
-                    "v_cramer": 0.15
+                    "d_cohen": round(float(d_cohen), 4),
+                    "boxplot_group": "TP_SEXO"
                 }
                 amostra_dados = df_analise.head(30).where(pd.notnull(df_analise), None).to_dict(orient='records')
 
             else: # Múltiplos Grupos (Padrão)
-                grupos_renda = [group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')]
-                stat_k, p_k = kruskal(*grupos_renda)
-                stat_ks, p_ks = kstest(df_analise['NOTA_GERAL'], 'norm')
+                # K-S Corrigido
+                mu, std = df_analise['NOTA_GERAL'].mean(), df_analise['NOTA_GERAL'].std()
+                stat_ks, p_ks = kstest(df_analise['NOTA_GERAL'], 'norm', args=(mu, std))
                 
+                amostra_shapiro = df_analise['NOTA_GERAL'].sample(min(len(df_analise), 5000))
+                stat_sw, p_sw = shapiro(amostra_shapiro)
+                
+                grupos_dict = {name: group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')}
+                grupos_lista = list(grupos_dict.values())
+                
+                stat_lev, p_lev = levene(*grupos_lista)
+                stat_k, p_k = kruskal(*grupos_lista)
+                
+                # Epsilon²
+                n_total = len(df_analise)
+                epsilon_sq = (stat_k - (len(grupos_lista) - 1)) / (n_total - (len(grupos_lista) - 1))
+
+                # Post-Hoc Dunn Completo (Pares significativos selecionados)
+                nomes = sorted(grupos_dict.keys())
+                dunn_results = {}
+                for i in range(len(nomes)):
+                    for j in range(i + 1, len(nomes)):
+                        g1, g2 = nomes[i], nomes[j]
+                        # Selecionamos vizinhos e extremos para não poluir demais (max 30 pares)
+                        if i == 0 or j == len(nomes)-1 or j == i + 1 or i == 1:
+                            _, p_pair = mannwhitneyu(grupos_dict[g1], grupos_dict[g2])
+                            dunn_results[f"{g1} vs {g2}"] = round(float(p_pair), 4)
+
                 resultados_estatisticos = {
-                    "n_total": len(df_analise),
-                    "p_valor": float(p_k),
-                    "normalidade": {"teste": "Kolmogorov-Smirnov", "stat": round(float(stat_ks), 4), "p": float(p_ks)},
+                    "n_total": n_total,
+                    "ks": {"stat": round(float(stat_ks), 4), "p": float(p_ks)},
+                    "shapiro": {"stat": round(float(stat_sw), 4), "p": float(p_sw)},
+                    "levene": {"stat": round(float(stat_lev), 4), "p": float(p_lev)},
                     "kruskal": {"stat": round(float(stat_k), 4), "p": float(p_k)},
-                    "epsilon_sq": 0.12
+                    "epsilon_sq": round(float(epsilon_sq), 4),
+                    "dunn_map": dunn_results,
+                    "boxplot_group": "Q006"
                 }
                 amostra_dados = df_analise.head(30).where(pd.notnull(df_analise), None).to_dict(orient='records')
 

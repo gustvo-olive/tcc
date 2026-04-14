@@ -1,0 +1,125 @@
+{
+  "nodes": [
+    {
+      "id": "pergunta-1",
+      "position": { "x": 250, "y": 30 },
+      "data": { "label": "DESAFIO: Existe diferença significativa entre a nota de REDAÇÃO de Homens e Mulheres no ENEM 2023?" },
+      "type": "input"
+    },
+    {
+      "id": "node-base",
+      "position": { "x": 375, "y": 150 },
+      "data": { "label": "📊 Microdados ENEM", "color": "#2563eb", "icon": "📊" },
+      "type": "tool"
+    },
+    {
+      "id": "node-boxplot",
+      "position": { "x": 380, "y": 250 },
+      "data": { "label": "📊 Boxplot", "color": "#0891b2", "icon": "📊" },
+      "type": "tool"
+    },
+    {
+      "id": "cond-n",
+      "position": { "x": 400, "y": 350 },
+      "data": { "label": "N > 5000?", "color": "#eab308", "icon": "⚙️" },
+      "type": "condition"
+    },
+    {
+      "id": "node-ks",
+      "position": { "x": 550, "y": 450 },
+      "data": { "label": "⚖️ Kolmogorov-Smirnov", "color": "#8b5cf6", "icon": "📊" },
+      "type": "tool"
+    },
+    {
+      "id": "node-shapiro",
+      "position": { "x": 200, "y": 450 },
+      "data": { "label": "⚖️ Shapiro-Wilk", "color": "#a855f7", "icon": "📈" },
+      "type": "tool"
+    },
+    {
+      "id": "node-levene",
+      "position": { "x": 380, "y": 550 },
+      "data": { "label": "⚖️ Teste de Levene", "color": "#f97316", "icon": "⚖️" },
+      "type": "tool"
+    },
+    {
+      "id": "cond-normal",
+      "position": { "x": 400, "y": 650 },
+      "data": { "label": "É Normal?", "color": "#eab308", "icon": "⚙️" },
+      "type": "condition"
+    },
+    {
+      "id": "node-testet",
+      "position": { "x": 600, "y": 750 },
+      "data": { "label": "🧮 Teste T", "color": "#ef4444", "icon": "🧮" },
+      "type": "tool"
+    },
+    {
+      "id": "node-mann",
+      "position": { "x": 200, "y": 750 },
+      "data": { "label": "🧮 Mann-Whitney", "color": "#16a34a", "icon": "📉" },
+      "type": "tool"
+    },
+    {
+      "id": "cond-p-testet",
+      "position": { "x": 620, "y": 850 },
+      "data": { "label": "P < 0.05?", "color": "#eab308", "icon": "⚙️" },
+      "type": "condition"
+    },
+    {
+      "id": "cond-p-mann",
+      "position": { "x": 220, "y": 850 },
+      "data": { "label": "P < 0.05?", "color": "#eab308", "icon": "⚙️" },
+      "type": "condition"
+    },
+    {
+      "id": "node-cohen-t",
+      "position": { "x": 750, "y": 950 },
+      "data": { "label": "📏 d de Cohen", "color": "#0f766e", "icon": "📏" },
+      "type": "tool"
+    },
+    {
+      "id": "node-cohen-m",
+      "position": { "x": 300, "y": 950 },
+      "data": { "label": "📏 d de Cohen", "color": "#0f766e", "icon": "📏" },
+      "type": "tool"
+    },
+    {
+      "id": "end-h0",
+      "position": { "x": 400, "y": 1050 },
+      "data": { "label": "🛑 Aceitar H0", "color": "#94a3b8", "icon": "⚙️" },
+      "type": "end"
+    },
+    {
+      "id": "end-sucesso",
+      "position": { "x": 550, "y": 1150 },
+      "data": { "label": "🏆 Sucesso", "color": "#10b981", "icon": "⚙️" },
+      "type": "end"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "pergunta-1", "target": "node-base", "animated": true },
+    { "id": "e2", "source": "node-base", "target": "node-boxplot", "animated": true },
+    { "id": "e3", "source": "node-boxplot", "target": "cond-n", "animated": true },
+    { "id": "e4", "source": "cond-n", "sourceHandle": "sim", "target": "node-ks", "animated": true },
+    { "id": "e5", "source": "cond-n", "sourceHandle": "nao", "target": "node-shapiro", "animated": true },
+    { "id": "e6", "source": "node-ks", "target": "node-levene", "animated": true },
+    { "id": "e7", "source": "node-shapiro", "target": "node-levene", "animated": true },
+    { "id": "e8", "source": "node-levene", "target": "cond-normal", "animated": true },
+    { "id": "e9", "source": "cond-normal", "sourceHandle": "sim", "target": "node-testet", "animated": true },
+    { "id": "e10", "source": "cond-normal", "sourceHandle": "nao", "target": "node-mann", "animated": true },
+    { "id": "e11", "source": "node-testet", "target": "cond-p-testet", "animated": true },
+    { "id": "e12", "source": "node-mann", "target": "cond-p-mann", "animated": true },
+    { "id": "e13", "source": "cond-p-testet", "sourceHandle": "sim", "target": "node-cohen-t", "animated": true },
+    { "id": "e14", "source": "cond-p-testet", "sourceHandle": "nao", "target": "end-h0", "animated": true },
+    { "id": "e15", "source": "cond-p-mann", "sourceHandle": "sim", "target": "node-cohen-m", "animated": true },
+    { "id": "e16", "source": "cond-p-mann", "sourceHandle": "nao", "target": "end-h0", "animated": true },
+    { "id": "e17", "source": "node-cohen-t", "target": "end-sucesso", "animated": true },
+    { "id": "e18", "source": "node-cohen-m", "target": "end-sucesso", "animated": true }
+  ],
+  "metadata": {
+    "licaoId": "trilha-dois-grupos",
+    "criadoEm": "2026-04-14T11:00:00.000Z",
+    "autor": "Gemini CLI"
+  }
+}

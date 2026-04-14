@@ -12,12 +12,12 @@ export const TRILHAS_CONTENT = {
       },
       {
         id: 2,
-        titulo: "Fase 2: Testes de Normalidade (O Tamanho Importa!)",
+        titulo: "Fase 2: Testes de Normalidade (O Tamanho da Amostra Importa)",
         conteudo: [
           { tipo: "texto", valor: "Para saber se os dados seguem a 'Curva de Sino', escolhemos o teste baseado no tamanho da sua amostra (N):" },
-          { tipo: "conceito", titulo: "Amostras Pequenas (N < 5000)", valor: "Use o Teste de Shapiro-Wilk. Ele é muito sensível e preciso para poucos dados." },
+          { tipo: "conceito", titulo: "Amostras Pequenas (N < 5000)", valor: "Use o Teste de Shapiro-Wilk. Ele é o mais poderoso e preciso para amostras menores." },
           { tipo: "conceito", titulo: "Amostras Grandes (N ≥ 5000)", valor: "Use o Teste de Kolmogorov-Smirnov (K-S). Como o ENEM tem milhões de dados, este será seu teste padrão na maioria das vezes!" },
-          { tipo: "alerta", valor: "🚨 REGRA: Se o P-valor desses testes for menor que 0.05, seus dados NÃO são normais. Isso te obriga a mudar de rota!" }
+          { tipo: "alerta", valor: "🚨 REGRA: Se o P-valor desses testes for menor que 0.05, seus dados NÃO são normais. Isso te obriga a buscar caminhos não-paramétricos!" }
         ]
       },
       {
@@ -101,8 +101,9 @@ export const TRILHAS_CONTENT = {
         id: 3,
         titulo: "Fase 3: Os Porteiros (Normalidade e Levene)",
         conteudo: [
-          { tipo: "texto", valor: "Para dois grupos, o rigor é o mesmo:" },
-          { tipo: "conceito", titulo: "Normalidade (K-S)", valor: "Como o ENEM tem N > 5000, o Kolmogorov-Smirnov dirá se os dados seguem a curva de sino." },
+          { tipo: "texto", valor: "Antes de rodar o teste de comparação, você precisa passar pelos porteiros:" },
+          { tipo: "conceito", titulo: "Normalidade (N < 5000)", valor: "Use o Teste de Shapiro-Wilk. Ele verifica se os dados de cada grupo seguem a distribuição normal." },
+          { tipo: "conceito", titulo: "Normalidade (N ≥ 5000)", valor: "Use o Kolmogorov-Smirnov (K-S). Para grandes volumes de dados (ENEM), ele é o padrão." },
           { tipo: "conceito", titulo: "Variância (Levene)", valor: "O Teste de Levene aqui é crucial. Se as variâncias forem diferentes, o Teste T padrão pode mentir. Fique atento ao P-valor!" }
         ]
       },
