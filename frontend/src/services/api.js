@@ -27,12 +27,39 @@ export const enviarGrafoParaProcessamento = async (nodes, edges, licaoId) => {
   }
 };
 
-export const buscarStatusProcessamento = async (processId) => {
+export const buscarDadosUsuario = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/status/${processId}`);
+    const response = await fetch(`${API_BASE_URL}/usuario/dados-completos`);
+    if (!response.ok) throw new Error('Falha ao carregar dados do usuário');
     return await response.json();
   } catch (error) {
-    console.error("Erro ao buscar status:", error);
-    throw error;
+    console.error("Erro ao buscar dados do usuário:", error);
+    return null;
+  }
+};
+
+export const salvarProgressoNoBackend = async (licaoId, faseAtual) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/usuario/progresso`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ licao_id: licaoId, fase_atual: faseAtual }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.warn("Erro ao salvar progresso no backend (offline?):", error);
+  }
+};
+
+export const salvarBadgeNoBackend = async (badgeId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/usuario/badge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ badge_id: badgeId }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.warn("Erro ao salvar badge no backend:", error);
   }
 };

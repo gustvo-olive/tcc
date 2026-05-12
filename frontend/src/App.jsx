@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { unlockBadge } from './services/badgeService';
+import { buscarDadosUsuario } from './services/api';
 import BadgeNotification from './components/ui/BadgeNotification';
 
 // Páginas
@@ -13,6 +14,29 @@ export default function App() {
   const [paginaAtual, setPaginaAtual] = useState('selecao-modulo');
   const [moduloSelecionado, setModuloSelecionado] = useState(null);
   const [licaoAtual, setLicaoAtual] = useState(null);
+
+  // Sincronização Inicial com o Backend
+  useEffect(() => {
+    async function sync() {
+      const dados = await buscarDadosUsuario();
+      if (dados) {
+        // Sincroniza Badges
+        if (dados.badges) {
+          localStorage.setItem('tcc_badges_unlocked', JSON.stringify(dados.badges));
+        }
+        // Sincroniza Progressos
+        if (dados.progressos) {
+          Object.entries(dados.progressos).forEach(([id, info]) => {
+            localStorage.setItem(`progresso-${id}`, info.fase.toString());
+            // Se tiver nota, podemos salvar também se houver uso futuro
+            localStorage.setItem(`nota-${id}`, info.nota.toString());
+          });
+        }
+        console.log("🔄 Sincronização com SQLite concluída!");
+      }
+    }
+    sync();
+  }, []);
 
   // 1. Navegação: Home -> Dashboard do Módulo
   const handleSelecionarModulo = (moduloId) => {

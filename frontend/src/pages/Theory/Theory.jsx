@@ -25,6 +25,9 @@ const Theory = ({ licaoId, voltarAoDashboard, irParaCanvas }) => {
       setFaseAtualIdx(novoIdx);
       // Salvar progresso
       localStorage.setItem(`progresso-${licaoId}`, novoIdx.toString());
+      import('../../services/api').then(api => {
+        api.salvarProgressoNoBackend(licaoId, novoIdx);
+      });
       window.scrollTo(0, 0);
     } else {
       irParaCanvas(licaoId);

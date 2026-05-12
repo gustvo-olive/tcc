@@ -1,4 +1,5 @@
 import { BADGES } from '../constants/badges';
+import { salvarBadgeNoBackend } from './api';
 
 const STORAGE_KEY = 'tcc_badges_unlocked';
 
@@ -22,7 +23,11 @@ export function isUnlocked(badgeId) {
  */
 export function unlockBadge(badgeId) {
   const unlocked = getUnlockedBadges();
-  if (unlocked.includes(badgeId)) return false; // já tinha
+  
+  // Tenta salvar no backend (sempre, para garantir consistência)
+  salvarBadgeNoBackend(badgeId);
+
+  if (unlocked.includes(badgeId)) return false; // já tinha no local local
 
   const badge = BADGES.find(b => b.id === badgeId);
   if (!badge) return false;

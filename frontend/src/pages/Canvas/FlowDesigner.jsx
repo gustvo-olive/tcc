@@ -19,6 +19,7 @@ import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import Tooltip from '../../components/ui/Tooltip';
 import CanvasTutorial from '../../components/ui/CanvasTutorial';
+import { toPng } from 'html-to-image';
 import { unlockBadge } from '../../services/badgeService';
 
 // --- CONSTANTES FORA DO COMPONENTE PARA ESTABILIDADE ---
@@ -417,6 +418,82 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
     }
   };
 
+  const exportToPng = () => {
+    const el = document.querySelector('.react-flow');
+    if (!el) return;
+    const panel = el.querySelector('.react-flow__panel.top-right');
+    if (panel) panel.style.display = 'none';
+    toPng(el, { backgroundColor: '#f8fafc' })
+      .then((dataUrl) => {
+        const link = document.createElement('a');
+        link.download = `fluxograma_enem_${licaoId || 'analise'}.png`;
+        link.href = dataUrl;
+        link.click();
+        if (panel) panel.style.display = 'flex';
+        unlockBadge('primeira-foto');
+      })
+      .catch((err) => {
+        console.error('Erro ao gerar PNG:', err);
+        if (panel) panel.style.display = 'flex';
+      });
+  };
+
+  const exportToPython = () => {
+    let code = `\"\"\"
+Script gerado pelo ENEM DataAnalytics - CanvasLab
+Data: ${new Date().toLocaleString()}
+Trilha: ${licaoId}
+\"\"\"
+
+import pandas as pd
+import numpy as np
+from scipy import stats
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 1. Carregamento e Preparação
+print(\"🚀 Iniciando Análise...\")
+# Nota: Certifique-se de ter o arquivo CSV no mesmo diretório
+try:
+    df = pd.read_csv('enem_ma_participantes_2019_2023.csv')
+    df_analise = df[(df['NU_ANO'] == 2023) & (df['NOTA_GERAL'] > 0)].copy()
+    print(f\"✅ Dados carregados: {len(df_analise)} registros.\")
+except Exception as e:
+    print(f\"❌ Erro ao carregar dados: {e}\")
+    exit()
+
+`;
+
+    // Mapeamento simples de blocos para trechos de código
+    nodes.forEach(node => {
+      const label = node.data.label.toLowerCase();
+      if (label.includes('shapiro')) {
+        code += `\n# Pressuposto: Normalidade (Shapiro-Wilk)\nstat, p = stats.shapiro(df_analise['NOTA_GERAL'].sample(min(len(df_analise), 5000)))\nprint(f\"📊 Shapiro-Wilk: p-valor = {p:.4f}\")\n`;
+      } else if (label.includes('kolmogorov')) {
+        code += `\n# Pressuposto: Normalidade (K-S)\nmu, std = df_analise['NOTA_GERAL'].mean(), df_analise['NOTA_GERAL'].std()\nstat, p = stats.kstest(df_analise['NOTA_GERAL'], 'norm', args=(mu, std))\nprint(f\"📊 Kolmogorov-Smirnov: p-valor = {p:.4f}\")\n`;
+      } else if (label.includes('levene')) {
+        code += `\n# Pressuposto: Homocedasticidade (Levene)\ngrupos = [group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')]\nstat, p = stats.levene(*grupos)\nprint(f\"📊 Teste de Levene: p-valor = {p:.4f}\")\n`;
+      } else if (label.includes('kruskal')) {
+        code += `\n# Inferência: Kruskal-Wallis (Não-Paramétrico)\ngrupos = [group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')]\nstat, p = stats.kruskal(*grupos)\nprint(f\"🧪 Kruskal-Wallis: H = {stat:.2f}, p-valor = {p:.4e}\")\n`;
+      } else if (label.includes('anova')) {
+        code += `\n# Inferência: ANOVA (Paramétrico)\ngrupos = [group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')]\nstat, p = stats.f_oneway(*grupos)\nprint(f\"🧪 ANOVA: F = {stat:.2f}, p-valor = {p:.4e}\")\n`;
+      } else if (label.includes('pearson')) {
+        code += `\n# Associação: Correlação de Pearson\nrenda_map = {chr(65+i): i for i in range(17)}\ndf_analise['RENDA_NUM'] = df_analise['Q006'].map(renda_map)\nr, p = stats.pearsonr(df_analise['RENDA_NUM'], df_analise['NOTA_GERAL'])\nprint(f\"📈 Correlação de Pearson: r = {r:.4f}, p = {p:.4f}\")\n`;
+      } else if (label.includes('boxplot')) {
+        code += `\n# Visualização: Boxplot\nplt.figure(figsize=(12, 6))\nsns.boxplot(x='Q006', y='NOTA_GERAL', data=df_analise.sort_values('Q006'))\nplt.title('Distribuição de Notas por Renda')\nplt.show()\n`;
+      }
+    });
+
+    code += `\nprint(\"\\n✅ Análise concluída!\")`;
+
+    const blob = new Blob([code], { type: 'text/x-python' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `analise_enem_${licaoId}.py`;
+    link.click();
+  };
+
   const exportGoldStandard = () => {
     const data = { nodes, edges, metadata: { licaoId, criadoEm: new Date().toISOString() } };
     const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
@@ -461,6 +538,10 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
         <Tooltip conceito="Teste de normalidade mais sensível e preciso." quando="Para amostras menores (N &lt; 50). Mais rigoroso que o K-S."><button onClick={() => addBlock('⚖️ Shapiro-Wilk', '#a855f7', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Shapiro-Wilk</button></Tooltip>
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>3. INFERÊNCIA</h4>
+        <Tooltip conceito="Mede a força e direção da relação linear entre duas variáveis contínuas." quando="Ambas as variáveis forem normais e a relação for linear (ex: Renda vs Nota)."><button onClick={() => addBlock('🧮 Pearson (r)', '#ef4444', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Pearson (Linear)</button></Tooltip>
+        <Tooltip conceito="Mede a relação de postos (rank) entre duas variáveis, não exigindo normalidade." quando="Os dados não forem normais ou a relação não for linear."><button onClick={() => addBlock('🧮 Spearman (ρ)', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Spearman (Postos)</button></Tooltip>
+        <Tooltip conceito="Testa se existe associação significativa entre duas variáveis categóricas." quando="Quiser saber se o tipo de escola (Pública/Privada) está associado ao acesso à internet."><button onClick={() => addBlock('🧮 Qui-Quadrado (χ²)', '#d97706', 'tool', '🎲')} style={UI_STYLES.btnStyle}>+ Qui-Quadrado</button></Tooltip>
+
         <Tooltip conceito="Ponto de decisão: os dados seguem uma distribuição normal?" quando="Após rodar o Shapiro-Wilk ou K-S, para escolher o caminho certo."><button onClick={() => addBlock('É Normal?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: É Normal?</button></Tooltip>
         <Tooltip conceito="Teste paramétrico que compara as médias de 3 ou mais grupos." quando="Os dados forem normalmente distribuídos e as variâncias forem homogêneas."><button onClick={() => addBlock('🧮 ANOVA', '#ef4444', 'tool', '🧮')} style={UI_STYLES.btnStyle}>+ ANOVA</button></Tooltip>
         <Tooltip conceito="Alternativa não-paramétrica à ANOVA, baseada em postos (ranks)." quando="Os dados não forem normais — caso do ENEM com N muito grande."><button onClick={() => addBlock('🧮 Kruskal-Wallis', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Kruskal-Wallis</button></Tooltip>
@@ -490,6 +571,7 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
             <input type="file" id="import-json" style={{ display: 'none' }} accept=".json" onChange={importGoldStandard} />
             <button onClick={() => document.getElementById('import-json').click()} style={{ padding: '10px 15px', background: '#475569', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>📤 Importar</button>
             <button onClick={exportGoldStandard} style={{ padding: '10px 15px', background: '#334155', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>📥 Exportar</button>
+            <button onClick={exportToPython} style={{ padding: '10px 15px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>🐍 Exportar Script</button>
             <button onClick={() => setIsLocked(!isLocked)} style={{ padding: '10px', background: isLocked ? '#ef4444' : '#e2e8f0', borderRadius: '5px' }}>{isLocked ? '🔒' : '🔓'}</button>
             <button onClick={submitHypothesis} disabled={enviando} style={{ padding: '10px 20px', background: enviando ? '#94a3b8' : '#10b981', color: 'white', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}>
               {enviando ? '⏳ ...' : '🚀 Validar'}
