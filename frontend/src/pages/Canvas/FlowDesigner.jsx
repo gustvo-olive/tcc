@@ -379,7 +379,7 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
                       <span style={{ position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', fontWeight: 'bold', fontSize: '14px' }}>Nota: {nota}/100</span>
                    </div>
                    
-                   <div style={{ textAlign: 'left', background: '#f8fafc', padding: '15px', borderRadius: '8px' }}>
+                   <div style={{ textAlign: 'left', background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                       <h4 style={{ margin: '0 0 10px 0', color: '#475569' }}>📑 Itens Identificados:</h4>
                       {acertos.map((acc, i) => (
                         <div key={i} style={{ fontSize: '13px', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -387,6 +387,20 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
                         </div>
                       ))}
                    </div>
+
+                   {response.validacao.feedbacks && response.validacao.feedbacks.length > 0 && (
+                     <div style={{ textAlign: 'left', background: '#f0f9ff', padding: '15px', borderRadius: '8px' }}>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#0369a1' }}>💬 Feedback de Conexões:</h4>
+                        <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                          {response.validacao.feedbacks.map((f, i) => (
+                            <div key={i} style={{ fontSize: '12px', marginBottom: '6px', color: f.tipo === 'positivo' ? '#16a34a' : '#dc2626', display: 'flex', gap: '8px' }}>
+                              <span>{f.tipo === 'positivo' ? '✅' : '❌'}</span> {f.mensagem}
+                            </div>
+                          ))}
+                        </div>
+                     </div>
+                   )}
+
                    <p style={{ marginTop: '15px', fontSize: '12px', color: '#94a3b8' }}>Parabéns! Sua análise seguiu os padrões científicos exigidos.</p>
                 </div>
               )
@@ -398,9 +412,23 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
               conteudo: (
                 <div style={{ padding: '10px' }}>
                    <p>Sua análise contém inconsistências estatísticas:</p>
-                   <div style={{ background: '#fef2f2', padding: '15px', borderRadius: '8px', border: '1px solid #fee2e2' }}>
+                   <div style={{ background: '#fef2f2', padding: '15px', borderRadius: '8px', border: '1px solid #fee2e2', marginBottom: '15px' }}>
                       {erros.map((err, i) => <div key={i} style={{ color: '#ef4444', marginBottom: '8px' }}>❌ {err}</div>)}
                    </div>
+
+                   {response.validacao.feedbacks && response.validacao.feedbacks.length > 0 && (
+                     <div style={{ textAlign: 'left', background: '#f0f9ff', padding: '15px', borderRadius: '8px' }}>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#0369a1' }}>💬 Feedback de Conexões:</h4>
+                        <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                          {response.validacao.feedbacks.map((f, i) => (
+                            <div key={i} style={{ fontSize: '12px', marginBottom: '6px', color: f.tipo === 'positivo' ? '#16a34a' : '#dc2626', display: 'flex', gap: '8px' }}>
+                              <span>{f.tipo === 'positivo' ? '✅' : '❌'}</span> {f.mensagem}
+                            </div>
+                          ))}
+                        </div>
+                     </div>
+                   )}
+
                    <p style={{ marginTop: '15px', fontSize: '14px' }}>Dica: O ENEM tem N &gt; 5000 e os dados não são normais.</p>
                 </div>
               )
