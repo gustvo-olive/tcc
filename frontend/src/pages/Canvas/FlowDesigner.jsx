@@ -439,7 +439,7 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
       }
     } catch (error) {
       console.error("Erro na validação:", error);
-      alert("Erro ao conectar com o motor estatístico.");
+      alert(`Erro ao conectar com o motor estatístico: ${error.message || "Servidor offline"}. Verifique se o backend está rodando em http://localhost:5000.`);
     } finally {
       setEnviando(false);
     }
