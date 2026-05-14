@@ -45,21 +45,29 @@ class GrafoPayload(BaseModel):
     edges: List[Dict[str, Any]]
     licao_id: str = "trilha-multiplos-grupos"
 
+@app.get("/")
+def health_check():
+    return {"status": "online", "base_carregada": df_global is not None}
+
 @app.post("/api/processar-fluxo")
 def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
     print(f"\n🚀 Validando fluxo: {payload.licao_id}")
 
-    # 1. Salva o histórico
-    novo_grafo = models.GrafoSalvo(
-        licao_id=payload.licao_id, 
-        dados_grafo=json.dumps({"nodes": payload.nodes, "edges": payload.edges})
-    )
-    db.add(novo_grafo)
-    db.commit()
+    try:
+        # 1. Salva o histórico
+        novo_grafo = models.GrafoSalvo(
+            licao_id=payload.licao_id, 
+            dados_grafo=json.dumps({"nodes": payload.nodes, "edges": payload.edges})
+        )
+        db.add(novo_grafo)
+        db.commit()
 
-    # 2. Validação via Juiz
-    juiz = JuizEstatistico(payload.nodes, payload.edges, payload.licao_id)
-    validacao = juiz.validar()
+        # 2. Validação via Juiz
+        juiz = JuizEstatistico(payload.nodes, payload.edges, payload.licao_id)
+        validacao = juiz.validar()
+    except Exception as e:
+        print(f"❌ Erro na validação/banco: {e}")
+        return {"status": "erro", "validacao": {"status": "erro", "erros": [f"Erro interno no servidor: {str(e)}"]}}
     
     # 3. Processamento de Dados Reais
     amostra_dados = []
@@ -70,6 +78,9 @@ def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
             # Filtro base comum para todas as trilhas (exceto a de limpeza que o aluno faz)
             df_analise = df_global[(df_global['NU_ANO'] == 2023) & (df_global['NOTA_GERAL'] > 0)].copy()
             
+            if df_analise.empty:
+                raise ValueError("A base filtrada está vazia para o ano 2023.")
+
             if payload.licao_id == "trilha-limpeza":
                 # Na trilha de limpeza, mostramos o impacto da filtragem
                 df_sujo = df_global[df_global['NU_ANO'] == 2023]
@@ -85,6 +96,9 @@ def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
                 homens = df_analise[df_analise['TP_SEXO'] == 'M']['NOTA_GERAL']
                 mulheres = df_analise[df_analise['TP_SEXO'] == 'F']['NOTA_GERAL']
                 
+                if homens.empty or mulheres.empty:
+                    raise ValueError("Dados insuficientes para comparação de dois grupos (M/F).")
+
                 # Testes de Normalidade Reais (Corrigido K-S)
                 mu, std = df_analise['NOTA_GERAL'].mean(), df_analise['NOTA_GERAL'].std()
                 stat_ks, p_ks = kstest(df_analise['NOTA_GERAL'], 'norm', args=(mu, std))
@@ -125,6 +139,9 @@ def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
                 grupos_dict = {name: group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')}
                 grupos_lista = list(grupos_dict.values())
                 
+                if len(grupos_lista) < 2:
+                    raise ValueError("Dados insuficientes para comparação de múltiplos grupos (Q006).")
+
                 stat_lev, p_lev = levene(*grupos_lista)
                 stat_k, p_k = kruskal(*grupos_lista)
                 
@@ -156,7 +173,20 @@ def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
                 amostra_dados = df_analise.head(30).where(pd.notnull(df_analise), None).to_dict(orient='records')
 
         except Exception as e:
+            print(f"❌ Erro no processamento estatístico: {e}")
             validacao["erros"].append(f"Erro no processamento estatístico: {str(e)}")
+
+    # Substituir NaNs por None para compatibilidade JSON
+    def clean_nans(obj):
+        if isinstance(obj, dict):
+            return {k: clean_nans(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [clean_nans(x) for x in obj]
+        elif isinstance(obj, float) and np.isnan(obj):
+            return None
+        return obj
+
+    resultados_estatisticos = clean_nans(resultados_estatisticos)
 
     return {"status": "sucesso", "preview": amostra_dados, "estatisticas": resultados_estatisticos, "validacao": validacao}
 
@@ -166,4 +196,4 @@ def status_processamento(process_id: int):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=5000)

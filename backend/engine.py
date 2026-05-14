@@ -57,21 +57,22 @@ class JuizEstatistico:
                     if "nodes" in data:
                         return self._extrair_pesos_do_flow_json(data)
                     return data
-            except: pass
+            except Exception as e:
+                print(f"Erro ao carregar gabarito JSON: {e}")
 
         # Padrões de Segurança (Caso o JSON falhe ou não exista)
         # Seguem a nova lógica: Críticos (20), Essenciais (10), Suporte (5)
         defaults = {
             "trilha-multiplos-grupos": {
                 "lista_labels": ["📊 Microdados ENEM", "⚖️ Kolmogorov-Smirnov", "⚖️ Teste de Levene", "🧮 Kruskal-Wallis", "📏 Epsilon²", "🏆 Sucesso"],
-                "pesos": {"📊 Microdados ENEM": 10, "⚖️ Kolmogorov-Smirnov": 10, "⚖️ Teste de Levene": 10, "🧮 Kruskal-Wallis": 20, "📏 Epsilon²": 5, "🏆 Sucesso": 10},
-                "precedencias": {"🧮 Kruskal-Wallis": ["⚖️ Teste de Levene"], "🏆 Sucesso": ["🧮 Kruskal-Wallis"]},
+                "mapeamento_pesos": [10, 10, 10, 20, 5, 10],
+                "precedencias": {"⚖️ Kolmogorov-Smirnov": ["📊 Microdados ENEM"], "⚖️ Teste de Levene": ["⚖️ Kolmogorov-Smirnov"], "🧮 Kruskal-Wallis": ["⚖️ Teste de Levene"], "📏 Epsilon²": ["🧮 Kruskal-Wallis"], "🏆 Sucesso": ["📏 Epsilon²"]},
                 "soma_total_pesos": 65
             },
             "trilha-dois-grupos": {
                 "lista_labels": ["📊 Microdados ENEM", "⚖️ Kolmogorov-Smirnov", "🧮 Mann-Whitney", "📏 d de Cohen", "🏆 Sucesso"],
-                "pesos": {"📊 Microdados ENEM": 10, "⚖️ Kolmogorov-Smirnov": 10, "🧮 Mann-Whitney": 20, "📏 d de Cohen": 5, "🏆 Sucesso": 10},
-                "precedencias": {"🧮 Mann-Whitney": ["⚖️ Kolmogorov-Smirnov"], "🏆 Sucesso": ["🧮 Mann-Whitney"]},
+                "mapeamento_pesos": [10, 10, 20, 5, 10],
+                "precedencias": {"⚖️ Kolmogorov-Smirnov": ["📊 Microdados ENEM"], "🧮 Mann-Whitney": ["⚖️ Kolmogorov-Smirnov"], "📏 d de Cohen": ["🧮 Mann-Whitney"], "🏆 Sucesso": ["📏 d de Cohen"]},
                 "soma_total_pesos": 55
             }
         }
@@ -100,16 +101,16 @@ class JuizEstatistico:
                 
                 mapeamento_pesos[nid] = peso
 
-        # Mapear Precedência
+        # Mapear Precedência (Conexões Esperadas)
         precedencias = {}
         for edge in flow_data["edges"]:
             src, tgt = edge['source'], edge['target']
-            if tgt in nos_esperados:
-                label_pai = nos_esperados.get(src)
-                if label_pai:
-                    if nos_esperados[tgt] not in precedencias:
-                        precedencias[nos_esperados[tgt]] = []
-                    precedencias[nos_esperados[tgt]].append(label_pai)
+            if tgt in nos_esperados and src in nos_esperados:
+                label_pai = nos_esperados[src]
+                label_filho = nos_esperados[tgt]
+                if label_filho not in precedencias:
+                    precedencias[label_filho] = []
+                precedencias[label_filho].append(label_pai)
         
         return {
             "lista_labels": list(nos_esperados.values()),
@@ -122,6 +123,7 @@ class JuizEstatistico:
         acertos = []
         erros = []
         alertas = []
+        feedbacks = [] # Lista de feedbacks (positivo/negativo) por conexão
         pontos_aluno = 0
         
         if not self.id_base:
@@ -133,13 +135,39 @@ class JuizEstatistico:
         pesos_lista = config.get("mapeamento_pesos", [])
         soma_total_gabarito = config.get("soma_total_pesos", 0)
 
+        # Mapeamento ID -> Label do Aluno
+        map_id_label_aluno = {n['id']: n.get('data', {}).get('label', '') for n in self.nodes}
+
+        # Validar Conexões Reais do Aluno
+        for edge in self.edges:
+            src_id, tgt_id = edge.get('source'), edge.get('target')
+            src_label = map_id_label_aluno.get(src_id, "")
+            tgt_label = map_id_label_aluno.get(tgt_id, "")
+
+            if not src_label or not tgt_label: continue
+
+            # Verificar se essa conexão existe no gabarito (baseado nos fragmentos de label)
+            encontrou_no_gabarito = False
+            for label_esperada, pais_esperados in precedencias.items():
+                if label_esperada.lower() in tgt_label.lower():
+                    for pai_esperado in pais_esperados:
+                        if pai_esperado.lower() in src_label.lower():
+                            encontrou_no_gabarito = True
+                            break
+                if encontrou_no_gabarito: break
+            
+            if encontrou_no_gabarito:
+                feedbacks.append({"tipo": "positivo", "mensagem": f"Conexão correta: '{src_label}' → '{tgt_label}'"})
+            else:
+                feedbacks.append({"tipo": "negativo", "mensagem": f"Conexão questionável: '{src_label}' → '{tgt_label}' não segue o rigor científico."})
+
         adj_inversa_aluno = {n['id']: [] for n in self.nodes}
         for edge in self.edges:
             adj_inversa_aluno[edge['target']].append(edge['source'])
 
         ids_computados_aluno = set()
 
-        # Percorrer o CHECKLIST do GABARITO (usando zip para manter o peso atrelado à posição)
+        # Percorrer o CHECKLIST do GABARITO
         for i, label_esperada in enumerate(lista_labels_esperadas):
             encontrou_correto = False
             peso_deste_bloco = pesos_lista[i] if i < len(pesos_lista) else 5
@@ -195,6 +223,7 @@ class JuizEstatistico:
             "acertos": acertos,
             "erros": erros,
             "alertas": alertas,
+            "feedbacks": feedbacks,
             "patente": self._get_patente(nota_percentual)
         }
 
