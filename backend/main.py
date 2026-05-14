@@ -25,9 +25,9 @@ def carregar_dados():
     if os.path.exists(DATA_PATH):
         try:
             df_global = pd.read_csv(DATA_PATH)
-            print(f"✅ Base carregada! Total: {len(df_global)} linhas.")
+            print(f"[OK] Base carregada! Total: {len(df_global)} linhas.")
         except Exception as e:
-            print(f"❌ Erro ao ler CSV: {e}")
+            print(f"[ERRO] Erro ao ler CSV: {e}")
 
 carregar_dados()
 models.Base.metadata.create_all(bind=engine)
@@ -51,7 +51,7 @@ def health_check():
 
 @app.post("/api/processar-fluxo")
 def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
-    print(f"\n🚀 Validando fluxo: {payload.licao_id}")
+    print(f"\n[INICIO] Validando fluxo: {payload.licao_id}")
 
     try:
         # 1. Salva o histórico
@@ -66,7 +66,7 @@ def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
         juiz = JuizEstatistico(payload.nodes, payload.edges, payload.licao_id)
         validacao = juiz.validar()
     except Exception as e:
-        print(f"❌ Erro na validação/banco: {e}")
+        print(f"[ERRO] Erro na validacao/banco: {e}")
         return {"status": "erro", "validacao": {"status": "erro", "erros": [f"Erro interno no servidor: {str(e)}"]}}
     
     # 3. Processamento de Dados Reais
@@ -173,7 +173,7 @@ def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
                 amostra_dados = df_analise.head(30).where(pd.notnull(df_analise), None).to_dict(orient='records')
 
         except Exception as e:
-            print(f"❌ Erro no processamento estatístico: {e}")
+            print(f"[ERRO] Erro no processamento estatistico: {e}")
             validacao["erros"].append(f"Erro no processamento estatístico: {str(e)}")
 
     # Substituir NaNs por None para compatibilidade JSON
