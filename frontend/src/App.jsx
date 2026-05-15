@@ -9,6 +9,7 @@ import ModuleSelection from './pages/ModuleSelection/ModuleSelection';
 import Dashboard from './pages/Dashboard/Dashboard';
 import FlowDesigner from './pages/Canvas/FlowDesigner';
 import Theory from './pages/Theory/Theory';
+import CleaningPipeline from './pages/Cleaning/CleaningPipeline';
 
 export default function App() {
   const [paginaAtual, setPaginaAtual] = useState('selecao-modulo');
@@ -85,12 +86,19 @@ export default function App() {
         />
       )}
 
-      {/* 4. Laboratório (Canvas - Onde o aluno monta o fluxo estatístico) */}
+      {/* 4. Laboratório (Canvas ou Pipeline Linear dependendo do contexto) */}
       {paginaAtual === 'canvas' && (
-        <FlowDesigner 
-          licaoId={licaoAtual}
-          voltarAoMenu={() => setPaginaAtual('teoria')} 
-        />
+        licaoAtual === 'trilha-limpeza' ? (
+          <CleaningPipeline 
+            licaoId={licaoAtual}
+            voltarAoMenu={() => setPaginaAtual('teoria')} 
+          />
+        ) : (
+          <FlowDesigner 
+            licaoId={licaoAtual}
+            voltarAoMenu={() => setPaginaAtual('teoria')} 
+          />
+        )
       )}
     </ReactFlowProvider>
     <BadgeNotification />

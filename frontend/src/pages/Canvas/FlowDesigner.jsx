@@ -83,7 +83,10 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
       const val = d[groupKey];
       if (val === null || val === undefined) return;
       if (!grupos[val]) grupos[val] = [];
-      if (d['NOTA_GERAL']) grupos[val].push(d['NOTA_GERAL']);
+      
+      // Tenta pegar a nota de diferentes colunas possíveis (ENEM vs Didático)
+      const nota = d['NOTA_GERAL'] !== undefined ? d['NOTA_GERAL'] : d['NOTA_EXAME'];
+      if (nota !== undefined && nota !== null) grupos[val].push(nota);
     });
 
     // Ordenar categorias existentes (remove vazias)
@@ -295,6 +298,31 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
         </div>
       );
     }
+    else if (lowerLabel.includes('remover') || lowerLabel.includes('filtrar') || lowerLabel.includes('tratar') || lowerLabel.includes('padronizar') || lowerLabel.includes('agrupar')) {
+      conteudo = (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <div style={{ fontSize: '50px', marginBottom: '10px' }}>🧹</div>
+          <h3 style={{ color: '#1e293b' }}>Operação: {label}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '20px' }}>
+            <div style={{ background: '#fef2f2', padding: '15px', borderRadius: '8px', border: '1px solid #fee2e2' }}>
+              <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 'bold' }}>REMOVIDOS</span>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ef4444' }}>{stats?.removidos || 0}</div>
+            </div>
+            <div style={{ background: '#f0fdf4', padding: '15px', borderRadius: '8px', border: '1px solid #dcfce7' }}>
+              <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>REMANESCENTES</span>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#10b981' }}>{stats?.n_atual || 0}</div>
+            </div>
+          </div>
+          <div style={{ marginTop: '25px', padding: '15px', background: '#f8fafc', borderRadius: '8px', textAlign: 'left', border: '1px solid #e2e8f0' }}>
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#475569' }}>🔍 Impacto na Qualidade:</h4>
+            <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+              Esta ação reduziu a "sujeira" da base. A saúde atual da amostra é de <strong>{stats?.saude || 0}%</strong>. 
+              {stats?.erros_criticos > 0 ? ` Ainda restam ${stats.erros_criticos} inconsistências graves.` : ' Excelente! Não detectamos mais erros críticos nesta amostra.'}
+            </p>
+          </div>
+        </div>
+      );
+    }
 
     setModalConfig({ titulo: `Análise: ${label}`, conteudo });
     setModalAberto(true);
@@ -439,6 +467,10 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
   };
 
   const exportToPython = () => {
+    const isAssoc = licaoId === 'trilha-associacao';
+    const isLimpeza = licaoId === 'trilha-limpeza';
+    const fileName = isAssoc ? 'base_associacao_didatica.csv' : (isLimpeza ? 'mini_enem_sujo.csv' : 'enem_ma_participantes_2019_2023.csv');
+
     let code = `\"\"\"
 Script gerado pelo ENEM DataAnalytics - CanvasLab
 Data: ${new Date().toLocaleString()}
@@ -455,8 +487,12 @@ import seaborn as sns
 print(\"🚀 Iniciando Análise...\")
 # Nota: Certifique-se de ter o arquivo CSV no mesmo diretório
 try:
-    df = pd.read_csv('enem_ma_participantes_2019_2023.csv')
-    df_analise = df[(df['NU_ANO'] == 2023) & (df['NOTA_GERAL'] > 0)].copy()
+    df = pd.read_csv('${fileName}')
+    # Filtragem básica apenas para base real do ENEM
+    if '${fileName}' == 'enem_ma_participantes_2019_2023.csv':
+        df_analise = df[(df['NU_ANO'] == 2023) & (df['NOTA_GERAL'] > 0)].copy()
+    else:
+        df_analise = df.copy()
     print(f\"✅ Dados carregados: {len(df_analise)} registros.\")
 except Exception as e:
     print(f\"❌ Erro ao carregar dados: {e}\")
@@ -466,21 +502,37 @@ except Exception as e:
 
     // Mapeamento simples de blocos para trechos de código
     nodes.forEach(node => {
-      const label = node.data.label.toLowerCase();
+      const label = node.data.label ? node.data.label.toLowerCase() : '';
+      const targetCol = isAssoc ? 'NOTA_EXAME' : 'NOTA_GERAL';
+
       if (label.includes('shapiro')) {
-        code += `\n# Pressuposto: Normalidade (Shapiro-Wilk)\nstat, p = stats.shapiro(df_analise['NOTA_GERAL'].sample(min(len(df_analise), 5000)))\nprint(f\"📊 Shapiro-Wilk: p-valor = {p:.4f}\")\n`;
+        code += `\n# Pressuposto: Normalidade (Shapiro-Wilk)\nstat, p = stats.shapiro(df_analise['${targetCol}'].dropna().sample(min(len(df_analise), 5000)))\nprint(f\"📊 Shapiro-Wilk: p-valor = {p:.4f}\")\n`;
       } else if (label.includes('kolmogorov')) {
-        code += `\n# Pressuposto: Normalidade (K-S)\nmu, std = df_analise['NOTA_GERAL'].mean(), df_analise['NOTA_GERAL'].std()\nstat, p = stats.kstest(df_analise['NOTA_GERAL'], 'norm', args=(mu, std))\nprint(f\"📊 Kolmogorov-Smirnov: p-valor = {p:.4f}\")\n`;
+        code += `\n# Pressuposto: Normalidade (K-S)\nmu, std = df_analise['${targetCol}'].mean(), df_analise['${targetCol}'].std()\nstat, p = stats.kstest(df_analise['${targetCol}'].dropna(), 'norm', args=(mu, std))\nprint(f\"📊 Kolmogorov-Smirnov: p-valor = {p:.4f}\")\n`;
       } else if (label.includes('levene')) {
-        code += `\n# Pressuposto: Homocedasticidade (Levene)\ngrupos = [group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')]\nstat, p = stats.levene(*grupos)\nprint(f\"📊 Teste de Levene: p-valor = {p:.4f}\")\n`;
+        const groupCol = isAssoc ? 'TP_ESCOLA' : 'Q006';
+        code += `\n# Pressuposto: Homocedasticidade (Levene)\ngrupos = [group['${targetCol}'].values for name, group in df_analise.groupby('${groupCol}')]\nstat, p = stats.levene(*grupos)\nprint(f\"📊 Teste de Levene: p-valor = {p:.4f}\")\n`;
       } else if (label.includes('kruskal')) {
-        code += `\n# Inferência: Kruskal-Wallis (Não-Paramétrico)\ngrupos = [group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')]\nstat, p = stats.kruskal(*grupos)\nprint(f\"🧪 Kruskal-Wallis: H = {stat:.2f}, p-valor = {p:.4e}\")\n`;
+        const groupCol = isAssoc ? 'TP_ESCOLA' : 'Q006';
+        code += `\n# Inferência: Kruskal-Wallis (Não-Paramétrico)\ngrupos = [group['${targetCol}'].values for name, group in df_analise.groupby('${groupCol}')]\nstat, p = stats.kruskal(*grupos)\nprint(f\"🧪 Kruskal-Wallis: H = {stat:.2f}, p-valor = {p:.4e}\")\n`;
       } else if (label.includes('anova')) {
-        code += `\n# Inferência: ANOVA (Paramétrico)\ngrupos = [group['NOTA_GERAL'].values for name, group in df_analise.groupby('Q006')]\nstat, p = stats.f_oneway(*grupos)\nprint(f\"🧪 ANOVA: F = {stat:.2f}, p-valor = {p:.4e}\")\n`;
+        const groupCol = isAssoc ? 'TP_ESCOLA' : 'Q006';
+        code += `\n# Inferência: ANOVA (Paramétrico)\ngrupos = [group['${targetCol}'].values for name, group in df_analise.groupby('${groupCol}')]\nstat, p = stats.f_oneway(*grupos)\nprint(f\"🧪 ANOVA: F = {stat:.2f}, p-valor = {p:.4e}\")\n`;
       } else if (label.includes('pearson')) {
-        code += `\n# Associação: Correlação de Pearson\nrenda_map = {chr(65+i): i for i in range(17)}\ndf_analise['RENDA_NUM'] = df_analise['Q006'].map(renda_map)\nr, p = stats.pearsonr(df_analise['RENDA_NUM'], df_analise['NOTA_GERAL'])\nprint(f\"📈 Correlação de Pearson: r = {r:.4f}, p = {p:.4f}\")\n`;
+        if (isAssoc) {
+          code += `\n# Associação: Correlação de Pearson\nr, p = stats.pearsonr(df_analise['HORAS_ESTUDO'], df_analise['NOTA_EXAME'])\nprint(f\"📈 Correlação de Pearson: r = {r:.4f}, p = {p:.4f}\")\n`;
+        } else {
+          code += `\n# Associação: Correlação de Pearson\nrenda_map = {chr(65+i): i for i in range(17)}\ndf_analise['RENDA_NUM'] = df_analise['Q006'].map(renda_map)\nr, p = stats.pearsonr(df_analise['RENDA_NUM'], df_analise['NOTA_GERAL'])\nprint(f\"📈 Correlação de Pearson: r = {r:.4f}, p = {p:.4f}\")\n`;
+        }
+      } else if (label.includes('qui-quadrado')) {
+        if (isAssoc) {
+          code += `\n# Associação: Qui-Quadrado\ncontingencia = pd.crosstab(df_analise['TP_ESCOLA'], df_analise['ACESSO_INTERNET'])\nchi2, p, dof, ex = stats.chi2_contingency(contingencia)\nprint(f\"🎲 Qui-Quadrado: chi2 = {chi2:.4f}, p = {p:.4f}\")\n`;
+        } else {
+          code += `\n# Associação: Qui-Quadrado\ncontingencia = pd.crosstab(df_analise['TP_ESCOLA'], df_analise['TP_SEXO'])\nchi2, p, dof, ex = stats.chi2_contingency(contingencia)\nprint(f\"🎲 Qui-Quadrado: chi2 = {chi2:.4f}, p = {p:.4f}\")\n`;
+        }
       } else if (label.includes('boxplot')) {
-        code += `\n# Visualização: Boxplot\nplt.figure(figsize=(12, 6))\nsns.boxplot(x='Q006', y='NOTA_GERAL', data=df_analise.sort_values('Q006'))\nplt.title('Distribuição de Notas por Renda')\nplt.show()\n`;
+        const groupCol = isAssoc ? 'TP_ESCOLA' : 'Q006';
+        code += `\n# Visualização: Boxplot\nplt.figure(figsize=(12, 6))\nsns.boxplot(x='${groupCol}', y='${targetCol}', data=df_analise.sort_values('${groupCol}'))\nplt.title('Distribuição de Notas por ${groupCol}')\nplt.show()\n`;
       }
     });
 
@@ -526,39 +578,69 @@ except Exception as e:
         <button onClick={voltarAoMenu} style={{ padding: '10px', background: '#e2e8f0', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px' }}>⬅ Voltar</button>
         
         <h4 style={{ margin: '0', color: '#475569', fontSize: '12px' }}>1. EXPLORAÇÃO (EDA)</h4>
-        <Tooltip conceito="Carrega a base de dados dos Microdados do ENEM 2023 para o Lab." quando="Deve ser sempre o primeiro bloco do seu fluxo."><button onClick={() => addBlock('📊 Microdados ENEM', '#2563eb', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Base ENEM 2023</button></Tooltip>
+        <Tooltip 
+          conceito={licaoId === 'trilha-associacao' ? "Carrega a base controlada para estudos de correlação e associação." : (licaoId === 'trilha-limpeza' ? "Carrega uma amostra com erros propositais para treinamento de limpeza." : "Carrega a base de dados dos Microdados do ENEM 2023 para o Lab.")} 
+          quando="Deve ser sempre o primeiro bloco do seu fluxo."
+        >
+          <button 
+            onClick={() => {
+              const label = licaoId === 'trilha-associacao' ? '📊 Base de Associação' : (licaoId === 'trilha-limpeza' ? '📊 Base ENEM (Suja)' : '📊 Microdados ENEM');
+              addBlock(label, '#2563eb', 'tool', '📊');
+            }} 
+            style={UI_STYLES.btnStyle}
+          >
+            {licaoId === 'trilha-associacao' ? '+ Base de Associação' : (licaoId === 'trilha-limpeza' ? '+ Base Suja (500 lin)' : '+ Base ENEM 2023')}
+          </button>
+        </Tooltip>
         <Tooltip conceito="Exibe os dados brutos carregados em uma tabela de amostra." quando="Quiser inspecionar como os dados estão estruturados."><button onClick={() => addBlock('👁️ Ver Tabela', '#0891b2', 'tool', '👁️')} style={UI_STYLES.btnStyle}>+ Visualizar Tabela</button></Tooltip>
         <Tooltip conceito="Conta e exibe o número total de registros (N) da base." quando="Precisar confirmar o tamanho da amostra antes de decidir qual teste usar."><button onClick={() => addBlock('🧮 Contar N', '#0891b2', 'tool', '🔢')} style={UI_STYLES.btnStyle}>+ Descobrir "N"</button></Tooltip>
-        <Tooltip conceito="Gera um Boxplot comparando a distribuição das notas por faixas de renda." quando="Quiser visualizar a dispersão dos dados antes de qualquer teste."><button onClick={() => addBlock('📉 Boxplot de Renda', '#0891b2', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Ver Distribuição</button></Tooltip>
-        <Tooltip conceito="Ponto de decisão: a amostra possui mais de 5.000 registros?" quando="Após contar o N para decidir se o Teorema do Limite Central se aplica."><button onClick={() => addBlock('N > 5000?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: N &gt; 5000?</button></Tooltip>
+        
+        {licaoId !== 'trilha-limpeza' && (
+          <>
+            <Tooltip conceito="Gera um Boxplot comparando a distribuição das notas por faixas de renda." quando="Quiser visualizar a dispersão dos dados antes de qualquer teste."><button onClick={() => addBlock('📉 Boxplot de Renda', '#0891b2', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Ver Distribuição</button></Tooltip>
+            <Tooltip conceito="Ponto de decisão: a amostra possui mais de 5.000 registros?" quando="Após contar o N para decidir se o Teorema do Limite Central se aplica."><button onClick={() => addBlock('N > 5000?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: N &gt; 5000?</button></Tooltip>
 
-        <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>2. PRESSUPOSTOS</h4>
-        <Tooltip conceito="Testa se a variância (dispersão) dos grupos é homogênea." quando="Antes de rodar uma ANOVA, para validar o pressuposto de homocedasticidade."><button onClick={() => addBlock('⚖️ Teste de Levene', '#f97316', 'tool', '⚖️')} style={UI_STYLES.btnStyle}>+ Teste de Levene</button></Tooltip>
-        <Tooltip conceito="Compara a distribuição dos dados com uma distribuição normal teórica." quando="Para testar normalidade em amostras grandes (N > 50)."><button onClick={() => addBlock('⚖️ Kolmogorov-Smirnov', '#8b5cf6', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Kolmogorov-Smirnov</button></Tooltip>
-        <Tooltip conceito="Teste de normalidade mais sensível e preciso." quando="Para amostras menores (N &lt; 50). Mais rigoroso que o K-S."><button onClick={() => addBlock('⚖️ Shapiro-Wilk', '#a855f7', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Shapiro-Wilk</button></Tooltip>
+            <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>2. PRESSUPOSTOS</h4>
+            <Tooltip conceito="Testa se a variância (dispersão) dos grupos é homogênea." quando="Antes de rodar uma ANOVA, para validar o pressuposto de homocedasticidade."><button onClick={() => addBlock('⚖️ Teste de Levene', '#f97316', 'tool', '⚖️')} style={UI_STYLES.btnStyle}>+ Teste de Levene</button></Tooltip>
+            <Tooltip conceito="Compara a distribuição dos dados com uma distribuição normal teórica." quando="Para testar normalidade em amostras grandes (N > 50)."><button onClick={() => addBlock('⚖️ Kolmogorov-Smirnov', '#8b5cf6', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Kolmogorov-Smirnov</button></Tooltip>
+            <Tooltip conceito="Teste de normalidade mais sensível e preciso." quando="Para amostras menores (N &lt; 50). Mais rigoroso que o K-S."><button onClick={() => addBlock('⚖️ Shapiro-Wilk', '#a855f7', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Shapiro-Wilk</button></Tooltip>
 
-        <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>3. INFERÊNCIA</h4>
-        <Tooltip conceito="Mede a força e direção da relação linear entre duas variáveis contínuas." quando="Ambas as variáveis forem normais e a relação for linear (ex: Renda vs Nota)."><button onClick={() => addBlock('🧮 Pearson (r)', '#ef4444', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Pearson (Linear)</button></Tooltip>
-        <Tooltip conceito="Mede a relação de postos (rank) entre duas variáveis, não exigindo normalidade." quando="Os dados não forem normais ou a relação não for linear."><button onClick={() => addBlock('🧮 Spearman (ρ)', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Spearman (Postos)</button></Tooltip>
-        <Tooltip conceito="Testa se existe associação significativa entre duas variáveis categóricas." quando="Quiser saber se o tipo de escola (Pública/Privada) está associado ao acesso à internet."><button onClick={() => addBlock('🧮 Qui-Quadrado (χ²)', '#d97706', 'tool', '🎲')} style={UI_STYLES.btnStyle}>+ Qui-Quadrado</button></Tooltip>
+            <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>3. INFERÊNCIA</h4>
+            <Tooltip conceito="Mede a força e direção da relação linear entre duas variáveis contínuas." quando="Ambas as variáveis forem normais e a relação for linear (ex: Renda vs Nota)."><button onClick={() => addBlock('🧮 Pearson (r)', '#ef4444', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Pearson (Linear)</button></Tooltip>
+            <Tooltip conceito="Mede a relação de postos (rank) entre duas variáveis, não exigindo normalidade." quando="Os dados não forem normais ou a relação não for linear."><button onClick={() => addBlock('🧮 Spearman (ρ)', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Spearman (Postos)</button></Tooltip>
+            <Tooltip conceito="Testa se existe associação significativa entre duas variáveis categóricas." quando="Quiser saber se o tipo de escola (Pública/Privada) está associado ao acesso à internet."><button onClick={() => addBlock('🧮 Qui-Quadrado (χ²)', '#d97706', 'tool', '🎲')} style={UI_STYLES.btnStyle}>+ Qui-Quadrado</button></Tooltip>
 
-        <Tooltip conceito="Ponto de decisão: os dados seguem uma distribuição normal?" quando="Após rodar o Shapiro-Wilk ou K-S, para escolher o caminho certo."><button onClick={() => addBlock('É Normal?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: É Normal?</button></Tooltip>
-        <Tooltip conceito="Teste paramétrico que compara as médias de 3 ou mais grupos." quando="Os dados forem normalmente distribuídos e as variâncias forem homogêneas."><button onClick={() => addBlock('🧮 ANOVA', '#ef4444', 'tool', '🧮')} style={UI_STYLES.btnStyle}>+ ANOVA</button></Tooltip>
-        <Tooltip conceito="Alternativa não-paramétrica à ANOVA, baseada em postos (ranks)." quando="Os dados não forem normais — caso do ENEM com N muito grande."><button onClick={() => addBlock('🧮 Kruskal-Wallis', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Kruskal-Wallis</button></Tooltip>
-        <Tooltip conceito="Teste paramétrico para comparar as médias de APENAS DOIS grupos (ex: Homens vs Mulheres)." quando="Os dados forem normais e você tiver apenas dois grupos para comparar."><button onClick={() => addBlock('🧮 Teste T', '#ef4444', 'tool', '⚖️')} style={UI_STYLES.btnStyle}>+ Teste T (2 Grupos)</button></Tooltip>
-        <Tooltip conceito="Teste não-paramétrico para comparar dois grupos independentes." quando="Os dados de dois grupos NÃO forem normais — muito comum no ENEM."><button onClick={() => addBlock('🧮 Mann-Whitney', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Mann-Whitney</button></Tooltip>
+            <Tooltip conceito="Ponto de decisão: os dados seguem uma distribuição normal?" quando="Após rodar o Shapiro-Wilk ou K-S, para escolher o caminho certo."><button onClick={() => addBlock('É Normal?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: É Normal?</button></Tooltip>
+            <Tooltip conceito="Teste paramétrico que compara as médias de 3 ou mais grupos." quando="Os dados forem normalmente distribuídos e as variâncias forem homogêneas."><button onClick={() => addBlock('🧮 ANOVA', '#ef4444', 'tool', '🧮')} style={UI_STYLES.btnStyle}>+ ANOVA</button></Tooltip>
+            <Tooltip conceito="Alternativa não-paramétrica à ANOVA, baseada em postos (ranks)." quando="Os dados não forem normais — caso do ENEM com N muito grande."><button onClick={() => addBlock('🧮 Kruskal-Wallis', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Kruskal-Wallis</button></Tooltip>
+            <Tooltip conceito="Teste paramétrico para comparar as médias de APENAS DOIS grupos (ex: Homens vs Mulheres)." quando="Os dados forem normais e você tiver apenas dois grupos para comparar."><button onClick={() => addBlock('🧮 Teste T', '#ef4444', 'tool', '⚖️')} style={UI_STYLES.btnStyle}>+ Teste T (2 Grupos)</button></Tooltip>
+            <Tooltip conceito="Teste não-paramétrico para comparar dois grupos independentes." quando="Os dados de dois grupos NÃO forem normais — muito comum no ENEM."><button onClick={() => addBlock('🧮 Mann-Whitney', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Mann-Whitney</button></Tooltip>
 
-        <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>4. SIGNIFICÂNCIA</h4>
-        <Tooltip conceito="Ponto de decisão: o p-valor do teste foi menor que 0,05?" quando="Após rodar o teste de inferência para checar se há diferença real."><button onClick={() => addBlock('P < 0.05?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: P-valor &lt; 0.05?</button></Tooltip>
+            <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>4. SIGNIFICÂNCIA</h4>
+            <Tooltip conceito="Ponto de decisão: o p-valor do teste foi menor que 0,05?" quando="Após rodar o teste de inferência para checar se há diferença real."><button onClick={() => addBlock('P < 0.05?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: P-valor &lt; 0.05?</button></Tooltip>
 
-        <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>5. TAMANHO DO EFEITO</h4>
-        <Tooltip conceito="Mede a magnitude da diferença encontrada pelo Kruskal-Wallis." quando="Após confirmar significância (p &lt; 0.05) usando o caminho não-paramétrico."><button onClick={() => addBlock('📏 Epsilon²', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ Epsilon-Squared</button></Tooltip>
-        <Tooltip conceito="Mede a magnitude da diferença encontrada pela ANOVA." quando="Após confirmar significância (p &lt; 0.05) usando o caminho paramétrico."><button onClick={() => addBlock('📏 Eta²', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ Eta-Squared</button></Tooltip>
-        <Tooltip conceito="Mede a magnitude da diferença entre dois grupos em unidades de desvio padrão." quando="Após testes de dois grupos (Teste T ou Mann-Whitney) significativos."><button onClick={() => addBlock('📏 d de Cohen', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ d de Cohen</button></Tooltip>
+            <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>5. TAMANHO DO EFEITO</h4>
+            <Tooltip conceito="Mede a magnitude da diferença encontrada pelo Kruskal-Wallis." quando="Após confirmar significância (p &lt; 0.05) usando o caminho não-paramétrico."><button onClick={() => addBlock('📏 Epsilon²', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ Epsilon-Squared</button></Tooltip>
+            <Tooltip conceito="Mede a magnitude da diferença encontrada pela ANOVA." quando="Após confirmar significância (p &lt; 0.05) usando o caminho paramétrico."><button onClick={() => addBlock('📏 Eta²', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ Eta-Squared</button></Tooltip>
+            <Tooltip conceito="Mede a magnitude da diferença entre dois grupos em unidades de desvio padrão." quando="Após testes de dois grupos (Teste T ou Mann-Whitney) significativos."><button onClick={() => addBlock('📏 d de Cohen', '#0f766e', 'tool', '📏')} style={UI_STYLES.btnStyle}>+ d de Cohen</button></Tooltip>
 
-        <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>6. POST-HOC</h4>
-        <Tooltip conceito="Identifica quais pares de grupos são estatisticamente diferentes." quando="Após o Kruskal-Wallis ser significativo, para saber quem difere de quem."><button onClick={() => addBlock('🔥 Heatmap de Dunn', '#d97706', 'tool', '🔥')} style={UI_STYLES.btnStyle}>+ Teste de Dunn</button></Tooltip>
-        <Tooltip conceito="Comparação par-a-par de médias após a ANOVA." quando="Após a ANOVA ser significativa, para detalhar quais grupos diferem."><button onClick={() => addBlock('📊 Teste de Tukey', '#d97706', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Teste de Tukey</button></Tooltip>
+            <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>6. POST-HOC</h4>
+            <Tooltip conceito="Identifica quais pares de grupos são estatisticamente diferentes." quando="Após o Kruskal-Wallis ser significativo, para saber quem difere de quem."><button onClick={() => addBlock('🔥 Heatmap de Dunn', '#d97706', 'tool', '🔥')} style={UI_STYLES.btnStyle}>+ Teste de Dunn</button></Tooltip>
+            <Tooltip conceito="Comparação par-a-par de médias após a ANOVA." quando="Após a ANOVA ser significativa, para detalhar quais grupos diferem."><button onClick={() => addBlock('📊 Teste de Tukey', '#d97706', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Teste de Tukey</button></Tooltip>
+          </>
+        )}
+
+        {licaoId === 'trilha-limpeza' && (
+          <>
+            <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>2. CURADORIA</h4>
+            <Tooltip conceito="Remove linhas com valores nulos (NaN) em colunas críticas." quando="Dados faltantes podem invalidar cálculos estatísticos."><button onClick={() => addBlock('🧹 Remover Nulos', '#0ea5e9', 'tool', '🧹')} style={UI_STYLES.btnStyle}>+ Filtrar Nulos</button></Tooltip>
+            <Tooltip conceito="Remove candidatos que não compareceram à prova." quando="Focar a análise apenas no desempenho real."><button onClick={() => addBlock('🧹 Filtrar Ausentes', '#0ea5e9', 'tool', '🚫')} style={UI_STYLES.btnStyle}>+ Remover Ausentes</button></Tooltip>
+            <Tooltip conceito="Elimina valores impossíveis (Idades > 120, Notas > 1000)." quando="Corrigir erros grosseiros de digitação ou sensores."><button onClick={() => addBlock('🧹 Tratar Outliers', '#0ea5e9', 'tool', '🎯')} style={UI_STYLES.btnStyle}>+ Limpar Outliers</button></Tooltip>
+            <Tooltip conceito="Remove registros idênticos repetidos na base." quando="Evitar viés por contagem duplicada de um mesmo evento."><button onClick={() => addBlock('🧹 Remover Duplicatas', '#0ea5e9', 'tool', '👥')} style={UI_STYLES.btnStyle}>+ Remover Duplicatas</button></Tooltip>
+            <Tooltip conceito="Converte datas em formatos mistos para o padrão internacional (ISO)." quando="Datas como 10/05/23 e 2023-05-10 precisam ser iguais."><button onClick={() => addBlock('🧹 Padronizar Datas', '#0ea5e9', 'tool', '📅')} style={UI_STYLES.btnStyle}>+ Padronizar Datas</button></Tooltip>
+            <Tooltip conceito="Cria um novo arquivo CSV com os dados limpos." quando="For o passo final da sua curadoria."><button onClick={() => addBlock('💾 Exportar CSV', '#10b981', 'tool', '💾')} style={UI_STYLES.btnStyle}>+ Exportar Limpo</button></Tooltip>
+          </>
+        )}
 
         <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>7. CONCLUSÃO</h4>
         <Tooltip conceito="Encerra o fluxo sem rejeitar a hipótese nula." quando="O p-valor for maior que 0.05 (sem diferença significativa entre grupos)."><button onClick={() => addBlock('🛑 Aceitar H0', '#94a3b8', 'end')} style={UI_STYLES.btnStyle}>+ Fim: Aceitar H0</button></Tooltip>
@@ -567,6 +649,27 @@ except Exception as e:
 
       <div style={{ flex: 1, position: 'relative' }}>
         <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} nodesDraggable={!isLocked} fitView>
+          {/* PAINEL DE SAÚDE DOS DADOS (INTERATIVIDADE) */}
+          <Panel position="top-left" style={{ background: 'white', padding: '15px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', minWidth: '220px' }}>
+            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', letterSpacing: '0.5px' }}>
+              <span>SAÚDE DA AMOSTRA</span>
+              <span style={{ color: (estatisticas?.saude || 0) > 80 ? '#10b981' : '#f59e0b' }}>{estatisticas?.saude || 0}%</span>
+            </div>
+            <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ width: `${estatisticas?.saude || 0}%`, height: '100%', background: (estatisticas?.saude || 0) > 80 ? '#10b981' : ((estatisticas?.saude || 0) > 50 ? '#f59e0b' : '#ef4444'), transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+            </div>
+            <div style={{ marginTop: '12px', display: 'flex', gap: '10px' }}>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b' }}>{estatisticas?.n_atual || 0}</div>
+                    <div style={{ fontSize: '9px', color: '#94a3b8' }}>Linhas Válidas</div>
+                </div>
+                <div style={{ flex: 1, textAlign: 'center', borderLeft: '1px solid #f1f5f9' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#ef4444' }}>{estatisticas?.erros_criticos || 0}</div>
+                    <div style={{ fontSize: '9px', color: '#94a3b8' }}>Erros Críticos</div>
+                </div>
+            </div>
+          </Panel>
+
           <Panel position="top-right" style={{ display: "flex", gap: "10px" }}>
             <input type="file" id="import-json" style={{ display: 'none' }} accept=".json" onChange={importGoldStandard} />
             <button onClick={() => document.getElementById('import-json').click()} style={{ padding: '10px 15px', background: '#475569', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>📤 Importar</button>

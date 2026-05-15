@@ -8,57 +8,99 @@ def gerar_dados_didaticos():
         os.makedirs(data_dir)
 
     # 1. Dataset para Trilha de Limpeza (Mini ENEM Sujo)
-    # 50 linhas com erros propositais
-    print("🧹 Gerando mini_enem_sujo.csv...")
-    n = 50
-    dados_sujos = {
+    # 500 linhas com desafios complexos de engenharia de dados
+    print("🧹 Gerando mini_enem_sujo.csv (500 linhas com desafios complexos)...")
+    n = 500
+    idades = np.random.randint(15, 60, size=n).tolist()
+    notas = np.random.randint(300, 950, size=n).astype(float).tolist()
+    situacao = ['OK'] * n
+    nomes = [f'Estudante {i}' for i in range(1, n+1)]
+    sexo = np.random.choice(['M', 'F'], size=n).tolist()
+    
+    # NOVAS COLUNAS PARA DESAFIOS COMPLEXOS
+    # Dates: Formatos mistos (YYYY-MM-DD e DD/MM/YY)
+    datas = []
+    for i in range(n):
+        if i % 3 == 0: datas.append(f"2023-05-{np.random.randint(10, 28)}")
+        else: datas.append(f"{np.random.randint(10, 28)}/05/23")
+    
+    # Categorias Inconsistentes
+    linguas = []
+    for i in range(n):
+        opcoes = ['Inglês', 'ingles', 'Ingles', 'ING', 'Espanhol', 'espanhol', 'ESP']
+        linguas.append(np.random.choice(opcoes))
+        
+    # Moeda/Renda Mista
+    rendas = []
+    for i in range(n):
+        val = np.random.randint(1000, 8000)
+        if i % 4 == 0: rendas.append(f"R$ {val}")
+        elif i % 4 == 1: rendas.append(f"{val},00")
+        else: rendas.append(float(val))
+
+    # Injetando "sujeira" pedagógica clássica
+    for i in range(0, n, 40): # Erros de Idade
+        idades[i] = 250 if i % 80 == 0 else -5
+        
+    for i in range(5, n, 30): # Erros de Nota
+        notas[i] = 9999.0 if i % 60 == 0 else np.nan
+        
+    df_sujo = pd.DataFrame({
         'ID': range(1, n+1),
-        'NOME': [f'Estudante {i}' for i in range(1, n+1)],
-        'IDADE': np.random.randint(15, 50, size=n).tolist(),
-        'NOTA_GERAL': np.random.randint(300, 900, size=n).astype(float).tolist(),
-        'TP_SEXO': np.random.choice(['M', 'F'], size=n).tolist(),
-        'SITUACAO': ['OK'] * n
-    }
-    
-    # Injetando sujeira
-    dados_sujos['IDADE'][5] = 250        # Outlier impossível
-    dados_sujos['NOTA_GERAL'][10] = 9999 # Erro de digitação
-    dados_sujos['NOTA_GERAL'][15] = np.nan # Dado faltante
-    dados_sujos['SITUACAO'][20] = 'ERRO' # Categoria para filtrar
-    
-    df_sujo = pd.DataFrame(dados_sujos)
+        'NOME': nomes,
+        'IDADE': idades,
+        'NOTA_GERAL': notas,
+        'TP_SEXO': sexo,
+        'DATA_INSCRICAO': datas,
+        'LINGUA': linguas,
+        'RENDA_BRUTA': rendas,
+        'SITUACAO': situacao
+    })
+
+    # Adicionando Duplicatas Explícitas (10 linhas repetidas)
+    duplicatas = df_sujo.head(10).copy()
+    df_sujo = pd.concat([df_sujo, duplicatas], ignore_index=True)
+
     df_sujo.to_csv(f'{data_dir}/mini_enem_sujo.csv', index=False)
 
     # 2. Dataset para Trilha de Associação (Didático)
     # Relação clara entre Horas de Estudo e Nota (Pearson)
     # Relação clara entre Escola e Internet (Qui-Quadrado)
-    print("📈 Gerando base_associacao_didatica.csv...")
-    n_assoc = 100
+    print("📈 Gerando base_associacao_didatica.csv (500 linhas)...")
+    n_assoc = 500
     
     # Pearson: Correlação Forte Positiva
-    horas = np.random.uniform(2, 10, n_assoc)
-    nota = (horas * 80) + np.random.normal(0, 30, n_assoc) + 100
+    horas = np.random.uniform(1, 12, n_assoc)
+    # Nota depende das horas + um pouco de erro aleatório
+    nota = (horas * 70) + np.random.normal(0, 40, n_assoc) + 150
+    # Clippar notas entre 0 e 1000
+    nota = np.clip(nota, 0, 1000)
     
-    # Qui-Quadrado: Dependência óbvia
-    escola = np.random.choice(['Pública', 'Privada'], size=n_assoc, p=[0.7, 0.3])
+    # Qui-Quadrado: Dependência óbvia entre Tipo de Escola e Acesso à Internet
+    escola = np.random.choice(['Pública', 'Privada'], size=n_assoc, p=[0.75, 0.25])
     internet = []
     for esc in escola:
         if esc == 'Privada':
-            internet.append(np.random.choice(['Sim', 'Não'], p=[0.95, 0.05]))
+            # 98% das privadas têm internet
+            internet.append(np.random.choice(['Sim', 'Não'], p=[0.98, 0.02]))
         else:
-            internet.append(np.random.choice(['Sim', 'Não'], p=[0.40, 0.60]))
+            # Apenas 45% das públicas têm internet (neste cenário fictício)
+            internet.append(np.random.choice(['Sim', 'Não'], p=[0.45, 0.55]))
 
     df_assoc = pd.DataFrame({
         'ID': range(1, n_assoc+1),
         'HORAS_ESTUDO': np.round(horas, 1),
         'NOTA_EXAME': np.round(nota, 1),
         'TP_ESCOLA': escola,
-        'ACESSO_INTERNET': internet,
-        'Q006': np.random.choice(['A', 'B', 'C', 'D'], size=n_assoc) # Para manter compatibilidade com widgets
+        'ACESSO_INTERNET': internet
     })
+    # Mantendo Q006 apenas como um "alias" invisível se necessário para algum gráfico legado,
+    # mas o ideal é que os widgets usem as colunas novas.
+    df_assoc['Q006'] = df_assoc['TP_ESCOLA'].map({'Pública': 'A', 'Privada': 'Q'})
+    
     df_assoc.to_csv(f'{data_dir}/base_associacao_didatica.csv', index=False)
     
-    print("✅ Datasets didáticos gerados com sucesso!")
+    print("✅ Datasets didáticos de 500 linhas gerados com sucesso!")
 
 if __name__ == "__main__":
     gerar_dados_didaticos()
