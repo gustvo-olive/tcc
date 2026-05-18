@@ -149,57 +149,58 @@ export const TRILHAS_CONTENT = {
       }
     ]
   },
-  'trilha-associacao': {
-    titulo: "Relações e Associações entre Variáveis",
+  'trilha-associacao-pearson': {
+    titulo: "Desafio 1: Renda vs Desempenho (Pearson)",
     fases: [
       {
         id: 1,
-        titulo: "Fase 1: Caminhando Juntos ou Separados?",
+        titulo: "O Questionamento PBL",
         conteudo: [
-          { tipo: "texto", valor: "Diferente da comparação de grupos, aqui buscamos entender como duas variáveis se comportam em conjunto. Existem dois grandes caminhos no ENEM:" },
-          { tipo: "conceito", titulo: "Correlação (Numérico vs Numérico)", valor: "Ex: 'Quanto maior a renda familiar, maior a nota de redação?'. Usamos quando as duas variáveis são números contínuos." },
-          { tipo: "conceito", titulo: "Associação (Categoria vs Categoria)", valor: "Ex: 'A escolha da Língua Estrangeira (Inglês/Espanhol) depende do Tipo de Escola?'. Usamos para categorias nominais." }
+          { tipo: "missao", valor: "QUESTÃO: Existe uma relação linear entre a Renda Familiar do aluno e a sua Nota Final?" },
+          { tipo: "texto", valor: "Neste desafio, você deve usar a estatística para provar se, à medida que a renda sobe, a nota também sobe de forma proporcional." }
         ]
       },
       {
         id: 2,
-        titulo: "Fase 2: Correlação de Pearson (O Caminho Paramétrico)",
+        titulo: "Ferramenta de Escolha: Pearson",
         conteudo: [
-          { tipo: "texto", valor: "Para variáveis que seguem a distribution normal, usamos o r de Pearson. Ele mede a força e a direção da relação linear." },
-          { tipo: "formula", valor: "r = \\frac{\\sum (x_i - \\bar{x})(y_i - \\bar{y})}{\\sqrt{\\sum (x_i - \\bar{x})^2 \\sum (y_i - \\bar{y})^2}}", legenda: "r varia de -1 a +1. Próximo de 0 significa 'sem relação'." },
-          { tipo: "alerta", valor: "⚠️ IMPORTANTE: Correlação não é Causalidade! Só porque variáveis caminham juntas, não significa que uma CAUSA a outra." }
+          { tipo: "texto", valor: "Como Renda e Nota são valores numéricos contínuos, a ferramenta ideal é o r de Pearson." },
+          { tipo: "dica", valor: "💡 Lembre-se: O Pearson exige que as variáveis sigam a distribuição normal. Verifique isso antes!" }
         ]
       },
       {
         id: 3,
-        titulo: "Fase 3: Spearman (Quando a Normalidade Falha)",
+        titulo: "Missão no Canvas",
         conteudo: [
-          { tipo: "texto", valor: "Se os seus dados do ENEM tiverem muitos outliers ou não forem normais, o r de Pearson vai te enganar. Nesse caso, usamos o r de Spearman (Não-Paramétrico)." },
-          { tipo: "dica", valor: "💡 O Spearman transforma os valores em rankings (posições) antes de calcular a relação. É muito mais robusto para dados 'bagunçados'." }
+          { tipo: "missao", valor: "Sua tarefa: \n1. Carregar a Base de Associação \n2. Testar a Normalidade \n3. Rodar a Correlação de Pearson \n4. Interpretar se o r é positivo e forte." }
+        ]
+      }
+    ]
+  },
+  'trilha-associacao-chi2': {
+    titulo: "Desafio 2: Desigualdade Digital (Qui-Quadrado)",
+    fases: [
+      {
+        id: 1,
+        titulo: "O Questionamento PBL",
+        conteudo: [
+          { tipo: "missao", valor: "QUESTÃO: O acesso à internet depende do tipo de escola (Pública ou Privada)?" },
+          { tipo: "texto", valor: "Não estamos falando de notas aqui, mas de CATEGORIAS. Queremos saber se ser de escola privada aumenta as chances de ter internet em casa." }
         ]
       },
       {
-        id: 4,
-        titulo: "Fase 4: Qui-Quadrado (A Tabela de Contingência)",
+        id: 2,
+        titulo: "Ferramenta de Escolha: Qui-Quadrado (χ²)",
         conteudo: [
-          { tipo: "texto", valor: "Para associar categorias (ex: Raça vs Acesso à Internet), montamos uma tabela cruzada e usamos o Teste de Qui-Quadrado ($ \\chi^2 $)." },
-          { tipo: "conceito", titulo: "Independência", valor: "O teste verifica se as proporções observadas são muito diferentes das proporções esperadas caso não houvesse relação nenhuma." },
-          { tipo: "formula", valor: "\\chi^2 = \\sum \\frac{(O_i - E_i)^2}{E_i}", legenda: "O = Observado, E = Esperado. Se o P-valor < 0.05, as variáveis estão associadas!" }
+          { tipo: "texto", valor: "Para cruzar duas categorias (Tipo de Escola vs Internet), usamos o teste de Qui-Quadrado e a Tabela de Contingência." },
+          { tipo: "conceito", titulo: "V de Cramer", valor: "Não esqueça de calcular o V de Cramer para ver se essa associação é forte ou apenas uma pequena tendência." }
         ]
       },
       {
-        id: 5,
-        titulo: "Fase 5: Magnitude (V de Cramer)",
+        id: 3,
+        titulo: "Missão no Canvas",
         conteudo: [
-          { tipo: "texto", valor: "Assim como na comparação de grupos, o P-valor aqui só diz se a associação existe. Para saber se ela é FORTE, usamos o V de Cramer." },
-          { tipo: "conceito", titulo: "V de Cramer", valor: "Varia de 0 a 1. \n- < 0.1: Desprezível \n- 0.1 a 0.3: Fraca \n- > 0.5: Forte associação." }
-        ]
-      },
-      {
-        id: 6,
-        titulo: "Fase 6: Missão Final no Canvas",
-        conteudo: [
-          { tipo: "missao", valor: "Sua jornada de associação: \n1. Definir as duas variáveis \n2. Se Numéricas -> Testar Normalidade -> Pearson ou Spearman \n3. Se Categorias -> Qui-Quadrado \n4. Calcular a Magnitude (r ou V de Cramer)." }
+          { tipo: "missao", valor: "Sua tarefa: \n1. Carregar a Base de Associação \n2. Adicionar o bloco de Qui-Quadrado \n3. Analisar a Tabela de Contingência no widget \n4. Confirmar a associação com o P-valor < 0.05." }
         ]
       }
     ]

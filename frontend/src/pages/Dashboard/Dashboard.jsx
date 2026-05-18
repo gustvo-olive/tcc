@@ -29,6 +29,20 @@ const Dashboard = ({ moduloId, acessarLicao, voltarParaModulos }) => {
     if (todasCompletas && trilhas.length > 0) unlockBadge('completista');
   }, [trilhas]);
 
+  const badgesUnlocked = JSON.parse(localStorage.getItem('tcc_badges_unlocked') || '[]');
+  const badgesCount = badgesUnlocked.length;
+
+  const getPatente = (progress) => {
+    if (progress >= 90) return "Mestre da Estatística 🏆";
+    if (progress >= 60) return "Cientista de Dados 📊";
+    if (progress >= 30) return "Pesquisador Júnior 📑";
+    return "Analista Iniciante 🧪";
+  };
+
+  const overallProgress = trilhas.length > 0 
+    ? Object.values(progreessos).reduce((a, b) => a + b, 0) / trilhas.length 
+    : 0;
+
   return (
     <div style={{ backgroundColor: '#f1f5f9', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
       <nav style={{ background: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
@@ -55,7 +69,36 @@ const Dashboard = ({ moduloId, acessarLicao, voltarParaModulos }) => {
         </p>
       </div>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
+      {/* 2. PERFIL DO CIENTISTA */}
+      <div style={{ maxWidth: '1200px', margin: '-40px auto 40px', padding: '0 20px', position: 'relative', zIndex: 10 }}>
+        <div style={{ background: 'white', borderRadius: '16px', padding: '25px 40px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+                <div style={{ width: '80px', height: '80px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', border: '4px solid #e2e8f0' }}>
+                    {getPatente(overallProgress).split(' ').pop()}
+                </div>
+                <div>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Patente Atual</div>
+                    <div style={{ fontSize: '22px', fontWeight: '900', color: '#1e293b' }}>{getPatente(overallProgress)}</div>
+                </div>
+            </div>
+            <div style={{ display: 'flex', gap: '50px' }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '5px' }}>Conquistas</div>
+                    <div style={{ fontSize: '24px', fontWeight: '900', color: '#6366f1' }}>{badgesCount}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '5px' }}>XP Módulo</div>
+                    <div style={{ fontSize: '24px', fontWeight: '900', color: '#10b981' }}>{Math.round(overallProgress * 10)}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '5px' }}>Conclusão</div>
+                    <div style={{ fontSize: '24px', fontWeight: '900', color: '#f59e0b' }}>{Math.round(overallProgress)}%</div>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px 40px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px' }}>
           {trilhas.map((trilha) => (
             <div key={trilha.id} style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0' }}>

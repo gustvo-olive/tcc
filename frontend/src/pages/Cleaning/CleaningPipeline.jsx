@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { enviarGrafoParaProcessamento } from '../../services/api';
 import DataTable from '../../components/ui/DataTable';
+import Modal from '../../components/ui/Modal';
 
 const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
   const [steps, setSteps] = useState([]);
@@ -9,36 +10,52 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('validos');
   const [showFullTable, setShowFullTable] = useState(false);
+  const [configNode, setConfigNode] = useState(null);
+
+  // Colunas disponíveis na base (extraídas do preview)
+  const columns = preview.length > 0 ? Object.keys(preview[0]) : [];
 
   // Opções de Blocos de Limpeza
   const AVAILABLE_BLOCKS = [
-    { id: 'nulos', label: '🧹 Remover Nulos', color: '#0ea5e9', desc: 'Elimina linhas com dados faltantes (NaN).' },
+    { id: 'nulos', label: '🧹 Remover Nulos', color: '#0ea5e9', desc: 'Elimina linhas com dados faltantes (NaN).', default_config: { colunas: [] } },
     { id: 'ausentes', label: '🚫 Filtrar Ausentes', color: '#3b82f6', desc: 'Remove candidatos com SITUACAO != OK.' },
-    { id: 'outliers', label: '🎯 Limpar Outliers', color: '#6366f1', desc: 'Remove idades > 120 e notas > 1000.' },
+    { id: 'outliers', label: '🎯 Limpar Outliers', color: '#6366f1', desc: 'Remove idades > 120 e notas > 1000.', default_config: { idade_max: 120, nota_max: 1000 } },
     { id: 'duplicatas', label: '👥 Remover Duplicatas', color: '#8b5cf6', desc: 'Remove registros idênticos repetidos.' },
-    { id: 'datas', label: '📅 Padronizar Datas', color: '#a855f7', desc: 'Uniformiza formatos DD/MM/YY e ISO.' },
-    { id: 'moeda', label: '💰 Padronizar Moeda', color: '#10b981', desc: 'Converte R$ e vírgulas para numérico.' },
+    { id: 'padronizar', label: '⚙️ Padronizar Dados', color: '#a855f7', desc: 'Uniformiza formatos de datas ou moeda.', default_config: { colunas: [] } },
+    { id: 'imputar', label: '🧪 Imputar Dados', color: '#ec4899', desc: 'Preenche nulos com a Média ou Mediana.', default_config: { coluna: '', metodo: 'mediana' } },
     { id: 'linguas', label: '🗣️ Agrupar Línguas', color: '#f59e0b', desc: 'Corrige variações (ex: Inglês, ING, ingles).' },
   ];
 
   const addStep = (block) => {
     if (steps.find(s => s.id === block.id)) return;
-    setSteps([...steps, { ...block, active: true }]);
+    setSteps([...steps, { ...block, active: true, config: block.default_config || {} }]);
   };
 
   const removeStep = (id) => {
     setSteps(steps.filter(s => s.id !== id));
   };
 
+  const handleUpdateConfig = (id, newConfig) => {
+    setSteps(steps.map(s => s.id === id ? { ...s, config: newConfig } : s));
+    setConfigNode(null);
+  };
+
   // Sincroniza com o Backend toda vez que o pipeline muda
   useEffect(() => {
     const runPipeline = async () => {
       setLoading(true);
-      const mockNodes = steps.map(s => ({ id: s.id, data: { label: s.label } }));
+      const mockNodes = steps.map(s => ({ 
+        id: s.id, 
+        data: { label: s.label, config: s.config } 
+      }));
       mockNodes.unshift({ id: 'node-base', data: { label: '📊 Base ENEM (Suja)' } });
 
       try {
         const res = await enviarGrafoParaProcessamento(mockNodes, [], licaoId);
+        if (res.status === 'erro') {
+          console.error("Erro no Backend:", res.mensagem);
+          return;
+        }
         if (res.estatisticas) setEstatisticas(res.estatisticas);
         if (res.preview) setPreview(res.preview);
       } catch (err) {
@@ -116,7 +133,7 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
         <div style={{ flex: 1, padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             
             <div style={{ width: '450px', background: '#1e293b', color: 'white', padding: '15px 25px', borderRadius: '12px', textAlign: 'center', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                📥 Entrada: Microdados ENEM (Base Suja)
+                📥 Entrada: Base de Dados (Suja)
             </div>
 
             {steps.map((step, index) => (
@@ -141,12 +158,22 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
                             <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '500' }}>Processamento ativo</div>
                         </div>
                     </div>
-                    <button 
-                        onClick={() => removeStep(step.id)}
-                        style={{ background: '#f8fafc', color: '#94a3b8', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '10px' }}
-                    >
-                        Remover
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        {step.default_config && (
+                            <button 
+                                onClick={() => setConfigNode(step)}
+                                style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}
+                            >
+                                ⚙️ Configurar
+                            </button>
+                        )}
+                        <button 
+                            onClick={() => removeStep(step.id)}
+                            style={{ background: '#f8fafc', color: '#94a3b8', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '10px' }}
+                        >
+                            Remover
+                        </button>
+                    </div>
                 </div>
               </div>
             ))}
@@ -168,6 +195,146 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
                 </div>
             )}
         </div>
+
+        {/* MODAL DE CONFIGURAÇÃO */}
+        <Modal 
+            isOpen={!!configNode} 
+            onClose={() => setConfigNode(null)} 
+            title={`Configurar: ${configNode?.label}`}
+        >
+            {configNode?.id === 'nulos' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <p style={{ fontSize: '14px', color: '#64748b' }}>Selecione as colunas que devem ser verificadas. Se houver um valor nulo em qualquer uma dessas colunas, a linha será removida.</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+                        {columns.map(col => (
+                            <label key={col} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', cursor: 'pointer' }}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={configNode.config.colunas.includes(col)}
+                                    onChange={(e) => {
+                                        const newCols = e.target.checked 
+                                            ? [...configNode.config.colunas, col]
+                                            : configNode.config.colunas.filter(c => c !== col);
+                                        setConfigNode({ ...configNode, config: { ...configNode.config, colunas: newCols } });
+                                    }}
+                                />
+                                {col}
+                            </label>
+                        ))}
+                    </div>
+                    <button 
+                        onClick={() => handleUpdateConfig(configNode.id, configNode.config)}
+                        style={{ alignSelf: 'flex-end', padding: '10px 25px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        Salvar Configuração
+                    </button>
+                </div>
+            )}
+
+            {configNode?.id === 'outliers' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <p style={{ fontSize: '14px', color: '#64748b' }}>Defina os limites máximos permitidos para as colunas de Idade e Nota Geral.</p>
+                    <div style={{ display: 'flex', gap: '30px' }}>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '8px' }}>IDADE MÁXIMA</label>
+                            <input 
+                                type="number" 
+                                value={configNode.config.idade_max}
+                                onChange={(e) => setConfigNode({ ...configNode, config: { ...configNode.config, idade_max: parseInt(e.target.value) } })}
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                            />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '8px' }}>NOTA MÁXIMA</label>
+                            <input 
+                                type="number" 
+                                value={configNode.config.nota_max}
+                                onChange={(e) => setConfigNode({ ...configNode, config: { ...configNode.config, nota_max: parseInt(e.target.value) } })}
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                            />
+                        </div>
+                    </div>
+                    <button 
+                        onClick={() => handleUpdateConfig(configNode.id, configNode.config)}
+                        style={{ alignSelf: 'flex-end', padding: '10px 25px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        Salvar Configuração
+                    </button>
+                </div>
+            )}
+
+            {configNode?.id === 'padronizar' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <p style={{ fontSize: '14px', color: '#64748b' }}>Selecione as colunas que possuem formatos inconsistentes (Datas com barras/traços ou Rendas com R$/Vírgulas). O sistema aplicará a melhor conversão para cada tipo.</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+                        {columns.map(col => (
+                            <label key={col} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', cursor: 'pointer', padding: '10px', background: (col === 'DATA_INSCRICAO' || col === 'RENDA_BRUTA') ? '#f0f9ff' : 'transparent', borderRadius: '8px', border: (col === 'DATA_INSCRICAO' || col === 'RENDA_BRUTA') ? '1px solid #bae6fd' : '1px solid transparent' }}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={configNode.config.colunas.includes(col)}
+                                    onChange={(e) => {
+                                        const newCols = e.target.checked 
+                                            ? [...configNode.config.colunas, col]
+                                            : configNode.config.colunas.filter(c => c !== col);
+                                        setConfigNode({ ...configNode, config: { ...configNode.config, colunas: newCols } });
+                                    }}
+                                />
+                                {col} {(col === 'DATA_INSCRICAO' || col === 'RENDA_BRUTA') && '✨'}
+                            </label>
+                        ))}
+                    </div>
+                    <button 
+                        onClick={() => handleUpdateConfig(configNode.id, configNode.config)}
+                        style={{ alignSelf: 'flex-end', padding: '10px 25px', background: '#a855f7', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        Salvar Configuração
+                    </button>
+                </div>
+            )}
+
+            {configNode?.id === 'imputar' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <p style={{ fontSize: '14px', color: '#64748b' }}>A Imputação permite preencher valores faltantes sem precisar deletar a linha inteira. Recomendado para variáveis numéricas como Notas ou Idade.</p>
+                    <div style={{ display: 'flex', gap: '20px' }}>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '8px' }}>COLUNA ALVO</label>
+                            <select 
+                                value={configNode.config.coluna}
+                                onChange={(e) => setConfigNode({ ...configNode, config: { ...configNode.config, coluna: e.target.value } })}
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white' }}
+                            >
+                                <option value="">Selecione uma coluna...</option>
+                                {columns.map(col => <option key={col} value={col}>{col}</option>)}
+                            </select>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '8px' }}>MÉTODO</label>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button 
+                                    onClick={() => setConfigNode({ ...configNode, config: { ...configNode.config, metodo: 'media' } })}
+                                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', background: configNode.config.metodo === 'media' ? '#f0f9ff' : 'white', color: configNode.config.metodo === 'media' ? '#0ea5e9' : '#64748b', fontWeight: 'bold', cursor: 'pointer' }}
+                                >
+                                    Média
+                                </button>
+                                <button 
+                                    onClick={() => setConfigNode({ ...configNode, config: { ...configNode.config, metodo: 'mediana' } })}
+                                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', background: configNode.config.metodo === 'mediana' ? '#f0f9ff' : 'white', color: configNode.config.metodo === 'mediana' ? '#0ea5e9' : '#64748b', fontWeight: 'bold', cursor: 'pointer' }}
+                                >
+                                    Mediana
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={() => handleUpdateConfig(configNode.id, configNode.config)}
+                        disabled={!configNode.config.coluna}
+                        style={{ alignSelf: 'flex-end', padding: '10px 25px', background: '#ec4899', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: configNode.config.coluna ? 'pointer' : 'not-allowed', opacity: configNode.config.coluna ? 1 : 0.5 }}
+                    >
+                        Salvar Configuração
+                    </button>
+                </div>
+            )}
+        </Modal>
 
         {/* PREVIEW DA TABELA (DRAWER INFERIOR) */}
         <div style={{ height: '300px', background: 'white', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>

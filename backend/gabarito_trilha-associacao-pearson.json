@@ -1,0 +1,40 @@
+{
+    "nodes": [
+      {
+        "id": "node-base",
+        "data": { "label": "📊 Base de Dados" }
+      },
+      {
+        "id": "node-scatter",
+        "data": { "label": "📈 Gráfico de Dispersão" }
+      },
+      {
+        "id": "node-n",
+        "data": { "label": "🧮 Contar N" }
+      },
+      {
+        "id": "node-ks",
+        "data": { "label": "⚖️ Kolmogorov-Smirnov" }
+      },
+      {
+        "id": "node-pearson",
+        "data": { "label": "🧮 Pearson (r)" }
+      },
+      {
+        "id": "cond-p",
+        "data": { "label": "P < 0.05?" }
+      },
+      {
+        "id": "node-fim",
+        "data": { "label": "🏆 Sucesso" }
+      }
+    ],
+    "edges": [
+      { "source": "node-base", "target": "node-scatter" },
+      { "source": "node-scatter", "target": "node-n" },
+      { "source": "node-n", "target": "node-ks" },
+      { "source": "node-ks", "target": "node-pearson" },
+      { "source": "node-pearson", "target": "cond-p" },
+      { "source": "cond-p", "target": "node-fim" }
+    ]
+  }

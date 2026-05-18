@@ -63,16 +63,28 @@ class JuizEstatistico:
         # Seguem a nova lógica: Críticos (20), Essenciais (10), Suporte (5)
         defaults = {
             "trilha-multiplos-grupos": {
-                "lista_labels": ["📊 Microdados ENEM", "⚖️ Kolmogorov-Smirnov", "⚖️ Teste de Levene", "🧮 Kruskal-Wallis", "📏 Epsilon²", "🏆 Sucesso"],
-                "pesos": {"📊 Microdados ENEM": 10, "⚖️ Kolmogorov-Smirnov": 10, "⚖️ Teste de Levene": 10, "🧮 Kruskal-Wallis": 20, "📏 Epsilon²": 5, "🏆 Sucesso": 10},
+                "lista_labels": ["📊 Base de Dados", "⚖️ Kolmogorov-Smirnov", "⚖️ Teste de Levene", "🧮 Kruskal-Wallis", "📏 Epsilon²", "🏆 Sucesso"],
+                "pesos": {"📊 Base de Dados": 10, "⚖️ Kolmogorov-Smirnov": 10, "⚖️ Teste de Levene": 10, "🧮 Kruskal-Wallis": 20, "📏 Epsilon²": 5, "🏆 Sucesso": 10},
                 "precedencias": {"🧮 Kruskal-Wallis": ["⚖️ Teste de Levene"], "🏆 Sucesso": ["🧮 Kruskal-Wallis"]},
                 "soma_total_pesos": 65
             },
             "trilha-dois-grupos": {
-                "lista_labels": ["📊 Microdados ENEM", "⚖️ Kolmogorov-Smirnov", "🧮 Mann-Whitney", "📏 d de Cohen", "🏆 Sucesso"],
-                "pesos": {"📊 Microdados ENEM": 10, "⚖️ Kolmogorov-Smirnov": 10, "🧮 Mann-Whitney": 20, "📏 d de Cohen": 5, "🏆 Sucesso": 10},
+                "lista_labels": ["📊 Base de Dados", "⚖️ Kolmogorov-Smirnov", "🧮 Mann-Whitney", "📏 d de Cohen", "🏆 Sucesso"],
+                "pesos": {"📊 Base de Dados": 10, "⚖️ Kolmogorov-Smirnov": 10, "🧮 Mann-Whitney": 20, "📏 d de Cohen": 5, "🏆 Sucesso": 10},
                 "precedencias": {"🧮 Mann-Whitney": ["⚖️ Kolmogorov-Smirnov"], "🏆 Sucesso": ["🧮 Mann-Whitney"]},
                 "soma_total_pesos": 55
+            },
+            "trilha-associacao-pearson": {
+                "lista_labels": ["📊 Base de Associação", "🧮 Contar N", "⚖️ Shapiro-Wilk", "🧮 Pearson (r)", "🏆 Sucesso"],
+                "pesos": {"📊 Base de Associação": 10, "🧮 Contar N": 5, "⚖️ Shapiro-Wilk": 10, "🧮 Pearson (r)": 20, "🏆 Sucesso": 10},
+                "precedencias": {"🧮 Pearson (r)": ["⚖️ Shapiro-Wilk"], "🏆 Sucesso": ["🧮 Pearson (r)"]},
+                "soma_total_pesos": 55
+            },
+            "trilha-associacao-chi2": {
+                "lista_labels": ["📊 Base de Associação", "🧮 Qui-Quadrado (χ²)", "🏆 Sucesso"],
+                "pesos": {"📊 Base de Associação": 10, "🧮 Qui-Quadrado (χ²)": 20, "🏆 Sucesso": 10},
+                "precedencias": {"🏆 Sucesso": ["🧮 Qui-Quadrado (χ²)"]},
+                "soma_total_pesos": 40
             }
         }
         return defaults.get(self.licao_id, defaults["trilha-multiplos-grupos"])
@@ -84,7 +96,7 @@ class JuizEstatistico:
         
         # Categorias de peso
         CRITICOS = ["teste t", "mann-whitney", "anova", "kruskal", "pearson", "qui-quadrado"]
-        ESSENCIAIS = ["microdados", "base", "kolmogorov", "shapiro", "levene", "sucesso", "normal?", "n > 5000?"]
+        ESSENCIAIS = ["microdados", "base", "kolmogorov", "shapiro", "levene", "sucesso", "normal?", "n > 5000?", "boxplot", "dispersão", "cramer"]
         
         for node in flow_data["nodes"]:
             label = node.get('data', {}).get('label', '')
@@ -163,7 +175,8 @@ class JuizEstatistico:
                         labels_pais_reais = [next((n.get('data', {}).get('label', '').lower() for n in self.nodes if n['id'] == pid), '') for pid in ids_pais_reais]
                         
                         if not any(any(p_esp.lower() in pr for pr in labels_pais_reais) for p_esp in pais_esperados):
-                            erros.append(f"⚖️ Rigor: '{label_esperada}' foi conectado fora de ordem!")
+                            msg = self._get_pedagogical_error(label_esperada)
+                            erros.append(f"⚖️ Rigor: {msg}")
                             encontrou_correto = True
                             break
 
@@ -178,25 +191,50 @@ class JuizEstatistico:
                 alertas.append(f"! Falta o bloco: {label_esperada}")
 
         # Cálculo da PORCENTAGEM REAL
-        nota_percentual = int((pontos_aluno / soma_total_gabarito) * 100) if soma_total_gabarito > 0 else 0
+        # Em PBL, se o aluno chegou ao Sucesso com rigor (sem erros), a nota deve ser alta.
+        if soma_total_gabarito > 0:
+            nota_percentual = int((pontos_aluno / soma_total_gabarito) * 100)
+        else:
+            nota_percentual = 0
         
-        # Teto de Segurança
-        nota_percentual = min(nota_percentual, 100)
+        # Bônus de Conclusão: Se chegou ao Sucesso sem erros de rigor, nota mínima 100
+        id_sucesso = self._find_node_id_by_label("Sucesso")
+        if id_sucesso and id_sucesso in self.nos_alcancaveis and not erros:
+            nota_percentual = 100
 
         # Penalidade Crítica: Se não chegar ao Sucesso, teto de 30%
-        id_sucesso = self._find_node_id_by_label("Sucesso")
         if not id_sucesso or id_sucesso not in self.nos_alcancaveis:
             nota_percentual = min(nota_percentual, 30)
-            erros.append("Pipeline incompleto: O fluxo não conclui com o nó de Sucesso.")
+            if not any("Pipeline incompleto" in e for e in erros):
+                erros.append("Pipeline incompleto: O fluxo não conclui com o nó de Sucesso. O objetivo da ciência é chegar a uma conclusão fundamentada!")
 
         return {
             "status": "concluido" if nota_percentual >= 60 else "erro_metodologico",
-            "nota": nota_percentual,
+            "nota": min(nota_percentual, 100),
             "acertos": acertos,
             "erros": erros,
             "alertas": alertas,
             "patente": self._get_patente(nota_percentual)
         }
+
+    def _get_pedagogical_error(self, label: str) -> str:
+        messages = {
+            "teste t": "Você tentou rodar o Teste T sem antes verificar a Normalidade ou Homocedasticidade. Testes paramétricos exigem que os pressupostos sejam validados primeiro!",
+            "anova": "A ANOVA exige que você verifique a Normalidade e a Homocedasticidade (Levene) dos grupos antes de realizar a comparação das médias.",
+            "kruskal-wallis": "Lembre-se de verificar a Homocedasticidade (Levene) antes de rodar o Kruskal-Wallis para garantir que a comparação entre os grupos seja válida.",
+            "mann-whitney": "O Mann-Whitney é um teste não-paramétrico, mas ainda assim é essencial verificar a distribuição dos dados (K-S) antes de prosseguir.",
+            "epsilon²": "O cálculo do tamanho do efeito (Epsilon²) deve vir obrigatoriamente após a confirmação de uma diferença significativa no teste de hipótese.",
+            "d de cohen": "O d de Cohen deve ser calculado apenas após encontrar um p-valor significativo no teste de comparação de grupos (Teste T ou Mann-Whitney).",
+            "sucesso": "O nó de Sucesso representa a conclusão da sua investigação e só deve ser conectado após todos os testes e pressupostos necessários.",
+            "kolmogorov-smirnov": "Antes de testar a normalidade, certifique-se de que a base de dados foi carregada e o N foi contado corretamente.",
+            "shapiro-wilk": "O teste de Shapiro-Wilk deve ser precedido pelo carregamento dos dados e análise do tamanho da amostra (N)."
+        }
+        
+        lower_label = label.lower()
+        for key, msg in messages.items():
+            if key in lower_label:
+                return msg
+        return f"O bloco '{label}' foi conectado fora da ordem lógica do método científico."
 
     def _get_patente(self, nota: int) -> str:
         if nota >= 95: return "Mestre da Estatística 🏆"

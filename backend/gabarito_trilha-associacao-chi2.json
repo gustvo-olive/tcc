@@ -1,0 +1,25 @@
+{
+    "nodes": [
+      {
+        "id": "node-base",
+        "data": { "label": "📊 Base de Dados" }
+      },
+      {
+        "id": "node-chi2",
+        "data": { "label": "🧮 Qui-Quadrado (χ²)" }
+      },
+      {
+        "id": "node-cramer",
+        "data": { "label": "📏 V de Cramer" }
+      },
+      {
+        "id": "node-fim",
+        "data": { "label": "🏆 Sucesso" }
+      }
+    ],
+    "edges": [
+      { "source": "node-base", "target": "node-chi2" },
+      { "source": "node-chi2", "target": "node-cramer" },
+      { "source": "node-cramer", "target": "node-fim" }
+    ]
+  }

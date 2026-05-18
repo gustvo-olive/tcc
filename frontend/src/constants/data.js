@@ -44,11 +44,18 @@ export const TRILHAS_MODULO_2 = [
     objetivo: 'Aprender a investigar diferenças entre duas realidades.'
   },
   { 
-    id: 'trilha-associacao', 
-    titulo: 'Relações e Associações', 
-    desc: 'A renda afeta a nota? O tipo de escola afeta a escolha da língua? Explore Correlação e Qui-Quadrado.',
-    icone: '🔗',
-    objetivo: 'Entender como variáveis se influenciam.'
+    id: 'trilha-associacao-pearson', 
+    titulo: 'Desafio: Renda vs Desempenho', 
+    desc: 'Existe relação entre a renda e a nota? Teste a correlação de Pearson.',
+    icone: '📈',
+    objetivo: 'Provar associações lineares entre notas.'
+  },
+  { 
+    id: 'trilha-associacao-chi2', 
+    titulo: 'Desafio: Desigualdade Digital', 
+    desc: 'O acesso à internet depende da escola? Teste via Qui-Quadrado.',
+    icone: '🎲',
+    objetivo: 'Investigar dependência entre categorias nominais.'
   }
 ];
 

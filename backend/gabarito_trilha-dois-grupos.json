@@ -9,7 +9,7 @@
     {
       "id": "node-base",
       "position": { "x": 375, "y": 150 },
-      "data": { "label": "📊 Microdados ENEM", "color": "#2563eb", "icon": "📊" },
+      "data": { "label": "📊 Base de Dados", "color": "#2563eb", "icon": "📊" },
       "type": "tool"
     },
     {

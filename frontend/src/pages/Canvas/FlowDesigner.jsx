@@ -130,6 +130,48 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
     );
   };
 
+  // Componente de Gráfico de Dispersão (SVG)
+  const ScatterPlot = ({ dados }) => {
+    if (!dados || dados.length === 0) return <p>Sem dados.</p>;
+    
+    // Filtra dados válidos para associação (Renda vs Nota)
+    const validData = dados.filter(d => d.HORAS_ESTUDO !== null && d.NOTA_EXAME !== null);
+    if (validData.length === 0) return <p>A base atual não possui colunas numéricas compatíveis.</p>;
+
+    const maxX = Math.max(...validData.map(d => d.HORAS_ESTUDO));
+    const maxY = 1000; // Teto do ENEM
+    
+    return (
+      <div style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <h4 style={{ color: '#1e293b', marginBottom: '20px' }}>📈 Relação: Horas de Estudo vs Nota do Exame</h4>
+        <svg width="100%" height="300" viewBox="0 0 400 300" style={{ overflow: 'visible' }}>
+          {/* Eixos */}
+          <line x1="40" y1="260" x2="380" y2="260" stroke="#cbd5e1" strokeWidth="2" />
+          <line x1="40" y1="20" x2="40" y2="260" stroke="#cbd5e1" strokeWidth="2" />
+          
+          {/* Pontos */}
+          {validData.slice(0, 100).map((d, i) => (
+            <circle 
+              key={i} 
+              cx={40 + (d.HORAS_ESTUDO / maxX) * 320} 
+              cy={260 - (d.NOTA_EXAME / maxY) * 240} 
+              r="3" 
+              fill="#6366f1" 
+              opacity="0.6" 
+            />
+          ))}
+          
+          {/* Legendas */}
+          <text x="210" y="290" textAnchor="middle" fontSize="10" fill="#94a3b8">Horas de Estudo (X)</text>
+          <text x="10" y="150" textAnchor="middle" fontSize="10" fill="#94a3b8" transform="rotate(-90 10,150)">Nota Final (Y)</text>
+        </svg>
+        <div style={{ marginTop: '20px', fontSize: '12px', color: '#64748b', background: '#f1f5f9', padding: '10px', borderRadius: '8px' }}>
+          💡 <strong>Dica PBL:</strong> Se os pontos seguem uma direção (ex: subindo da esquerda para a direita), existe uma correlação positiva!
+        </div>
+      </div>
+    );
+  };
+
   const abrirWidget = useCallback((label, dadosAtuais, stats) => {
     let conteudo = null;
     const lowerLabel = label.toLowerCase();
@@ -137,6 +179,9 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
     if (lowerLabel.includes('tabela')) {
       conteudo = <DataTable data={dadosAtuais} />;
     } 
+    else if (lowerLabel.includes('dispersão')) {
+      conteudo = <ScatterPlot dados={dadosAtuais} />;
+    }
     else if (lowerLabel.includes('distribuição') || lowerLabel.includes('boxplot')) {
       conteudo = <DynamicBoxPlot dados={dadosAtuais} groupKey={stats?.boxplot_group || 'Q006'} />;
     }
@@ -243,14 +288,42 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
       );
     }
     else if (lowerLabel.includes('qui-quadrado')) {
+      const tabela = stats?.chi2?.tabela;
       conteudo = (
-        <WidgetTesteEstatistico 
-          nome="Teste Qui-Quadrado (χ²)"
-          estatistica={`χ² = ${stats?.chi2?.stat || "0.00"}`}
-          pValor={stats?.chi2?.p || 0}
-          interpretacao={stats?.chi2?.p < 0.05 ? "Associação Significativa entre as categorias!" : "Variáveis Independentes (sem associação)."}
-          cor="#d97706"
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <WidgetTesteEstatistico 
+            nome="Teste Qui-Quadrado (χ²)"
+            estatistica={`χ² = ${stats?.chi2?.stat || "0.00"}`}
+            pValor={stats?.chi2?.p || 0}
+            interpretacao={stats?.chi2?.p < 0.05 ? "Há ASSOCIAÇÃO significativa entre as variáveis (P < 0.05). Rejeitamos H0." : "Sem evidência de associação significativa (P > 0.05). Aceitamos H0."}
+            cor="#8b5cf6"
+          />
+          {tabela && (
+            <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
+              <h4 style={{ margin: '0 0 15px 0', color: '#475569', fontSize: '14px', textAlign: 'center' }}>📊 Tabela de Contingência</h4>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr>
+                    <th style={{ borderBottom: '2px solid #e2e8f0', padding: '10px', textAlign: 'left', color: '#64748b' }}>Variável</th>
+                    {Object.keys(Object.values(tabela)[0]).map(col => (
+                      <th key={col} style={{ borderBottom: '2px solid #e2e8f0', padding: '10px', textAlign: 'center', color: '#64748b' }}>{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(tabela).map(([row, cols]) => (
+                    <tr key={row}>
+                      <td style={{ borderBottom: '1px solid #f1f5f9', padding: '10px', fontWeight: 'bold', color: '#1e293b' }}>{row}</td>
+                      {Object.values(cols).map((val, i) => (
+                        <td key={i} style={{ borderBottom: '1px solid #f1f5f9', padding: '10px', textAlign: 'center' }}>{val}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       );
     }
     else if (lowerLabel.includes('dunn') || lowerLabel.includes('tukey')) {
@@ -382,6 +455,12 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
     try {
       const response = await enviarGrafoParaProcessamento(nodes, edges, licaoId);
       console.log("✅ Resposta do Servidor:", response);
+
+      if (response.status === 'erro') {
+        alert(`Erro no Motor Estatístico: ${response.mensagem}`);
+        setEnviando(false);
+        return;
+      }
 
       if (response.preview) {
         setDadosReais(response.preview);
@@ -579,25 +658,38 @@ except Exception as e:
         
         <h4 style={{ margin: '0', color: '#475569', fontSize: '12px' }}>1. EXPLORAÇÃO (EDA)</h4>
         <Tooltip 
-          conceito={licaoId === 'trilha-associacao' ? "Carrega a base controlada para estudos de correlação e associação." : (licaoId === 'trilha-limpeza' ? "Carrega uma amostra com erros propositais para treinamento de limpeza." : "Carrega a base de dados dos Microdados do ENEM 2023 para o Lab.")} 
+          conceito={licaoId.includes('trilha-associacao') ? "Carrega a base controlada para estudos de correlação e associação." : (licaoId === 'trilha-limpeza' ? "Carrega uma amostra com erros propositais para treinamento de limpeza." : "Carrega a base de dados dos Microdados do ENEM 2023 para o Lab.")} 
           quando="Deve ser sempre o primeiro bloco do seu fluxo."
         >
           <button 
             onClick={() => {
-              const label = licaoId === 'trilha-associacao' ? '📊 Base de Associação' : (licaoId === 'trilha-limpeza' ? '📊 Base ENEM (Suja)' : '📊 Microdados ENEM');
+              const label = licaoId.includes('trilha-associacao') ? '📊 Base de Associação' : (licaoId === 'trilha-limpeza' ? '📊 Base ENEM (Suja)' : '📊 Base de Dados');
               addBlock(label, '#2563eb', 'tool', '📊');
             }} 
             style={UI_STYLES.btnStyle}
           >
-            {licaoId === 'trilha-associacao' ? '+ Base de Associação' : (licaoId === 'trilha-limpeza' ? '+ Base Suja (500 lin)' : '+ Base ENEM 2023')}
+            {licaoId.includes('trilha-associacao') ? '+ Base de Associação' : (licaoId === 'trilha-limpeza' ? '+ Base Suja (500 lin)' : '+ Base de Dados')}
           </button>
         </Tooltip>
+        {licaoId.includes('trilha-associacao') && (
+          <Tooltip conceito="Gera um Gráfico de Dispersão (Scatter Plot) para visualizar a relação entre duas variáveis numéricas." quando="Quiser ver se os dados seguem uma tendência linear antes de calcular o Pearson.">
+            <button onClick={() => addBlock('📈 Gráfico de Dispersão', '#6366f1', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Gráfico de Dispersão</button>
+          </Tooltip>
+        )}
+        
         <Tooltip conceito="Exibe os dados brutos carregados em uma tabela de amostra." quando="Quiser inspecionar como os dados estão estruturados."><button onClick={() => addBlock('👁️ Ver Tabela', '#0891b2', 'tool', '👁️')} style={UI_STYLES.btnStyle}>+ Visualizar Tabela</button></Tooltip>
         <Tooltip conceito="Conta e exibe o número total de registros (N) da base." quando="Precisar confirmar o tamanho da amostra antes de decidir qual teste usar."><button onClick={() => addBlock('🧮 Contar N', '#0891b2', 'tool', '🔢')} style={UI_STYLES.btnStyle}>+ Descobrir "N"</button></Tooltip>
         
         {licaoId !== 'trilha-limpeza' && (
           <>
-            <Tooltip conceito="Gera um Boxplot comparando a distribuição das notas por faixas de renda." quando="Quiser visualizar a dispersão dos dados antes de qualquer teste."><button onClick={() => addBlock('📉 Boxplot de Renda', '#0891b2', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Ver Distribuição</button></Tooltip>
+            <Tooltip conceito={`Gera um Boxplot comparando a distribuição das notas por ${licaoId === 'trilha-dois-grupos' ? 'gênero' : 'faixas de renda'}.`} quando="Quiser visualizar a dispersão dos dados antes de qualquer teste.">
+              <button 
+                onClick={() => addBlock(licaoId === 'trilha-dois-grupos' ? '📉 Boxplot de Gênero' : '📉 Boxplot de Renda', '#0891b2', 'tool', '📈')} 
+                style={UI_STYLES.btnStyle}
+              >
+                + Ver Distribuição
+              </button>
+            </Tooltip>
             <Tooltip conceito="Ponto de decisão: a amostra possui mais de 5.000 registros?" quando="Após contar o N para decidir se o Teorema do Limite Central se aplica."><button onClick={() => addBlock('N > 5000?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: N &gt; 5000?</button></Tooltip>
 
             <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>2. PRESSUPOSTOS</h4>
@@ -649,27 +741,6 @@ except Exception as e:
 
       <div style={{ flex: 1, position: 'relative' }}>
         <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} nodesDraggable={!isLocked} fitView>
-          {/* PAINEL DE SAÚDE DOS DADOS (INTERATIVIDADE) */}
-          <Panel position="top-left" style={{ background: 'white', padding: '15px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', minWidth: '220px' }}>
-            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', letterSpacing: '0.5px' }}>
-              <span>SAÚDE DA AMOSTRA</span>
-              <span style={{ color: (estatisticas?.saude || 0) > 80 ? '#10b981' : '#f59e0b' }}>{estatisticas?.saude || 0}%</span>
-            </div>
-            <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${estatisticas?.saude || 0}%`, height: '100%', background: (estatisticas?.saude || 0) > 80 ? '#10b981' : ((estatisticas?.saude || 0) > 50 ? '#f59e0b' : '#ef4444'), transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
-            </div>
-            <div style={{ marginTop: '12px', display: 'flex', gap: '10px' }}>
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b' }}>{estatisticas?.n_atual || 0}</div>
-                    <div style={{ fontSize: '9px', color: '#94a3b8' }}>Linhas Válidas</div>
-                </div>
-                <div style={{ flex: 1, textAlign: 'center', borderLeft: '1px solid #f1f5f9' }}>
-                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#ef4444' }}>{estatisticas?.erros_criticos || 0}</div>
-                    <div style={{ fontSize: '9px', color: '#94a3b8' }}>Erros Críticos</div>
-                </div>
-            </div>
-          </Panel>
-
           <Panel position="top-right" style={{ display: "flex", gap: "10px" }}>
             <input type="file" id="import-json" style={{ display: 'none' }} accept=".json" onChange={importGoldStandard} />
             <button onClick={() => document.getElementById('import-json').click()} style={{ padding: '10px 15px', background: '#475569', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>📤 Importar</button>
