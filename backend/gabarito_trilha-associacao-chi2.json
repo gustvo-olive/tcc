@@ -1,25 +1,87 @@
 {
-    "nodes": [
-      {
-        "id": "node-base",
-        "data": { "label": "📊 Base de Dados" }
-      },
-      {
-        "id": "node-chi2",
-        "data": { "label": "🧮 Qui-Quadrado (χ²)" }
-      },
-      {
-        "id": "node-cramer",
-        "data": { "label": "📏 V de Cramer" }
-      },
-      {
-        "id": "node-fim",
-        "data": { "label": "🏆 Sucesso" }
-      }
-    ],
-    "edges": [
-      { "source": "node-base", "target": "node-chi2" },
-      { "source": "node-chi2", "target": "node-cramer" },
-      { "source": "node-cramer", "target": "node-fim" }
-    ]
+  "nodes": [
+    {
+      "id": "input-missao",
+      "type": "input",
+      "data": { "label": "🎯 Missão: O acesso à internet depende do tipo de escola (Pública ou Privada)?" },
+      "position": { "x": 250, "y": 0 }
+    },
+    {
+      "id": "node-base",
+      "type": "tool",
+      "data": { "label": "📊 Base de Associação", "color": "#2563eb" },
+      "position": { "x": 250, "y": 100 }
+    },
+    {
+      "id": "node-crosstab",
+      "type": "tool",
+      "data": { "label": "📊 Tabela de Contingência", "color": "#0891b2" },
+      "position": { "x": 250, "y": 200 }
+    },
+    {
+      "id": "node-bars",
+      "type": "tool",
+      "data": { "label": "📊 Barras Agrupadas", "color": "#6366f1" },
+      "position": { "x": 250, "y": 300 }
+    },
+    {
+      "id": "cond-n",
+      "type": "condition",
+      "data": { "label": "Freq. Esperada > 5?" },
+      "position": { "x": 250, "y": 400 }
+    },
+    {
+      "id": "node-chi2",
+      "type": "tool",
+      "data": { "label": "🧮 Qui-Quadrado (χ²)", "color": "#d97706" },
+      "position": { "x": 100, "y": 550 }
+    },
+    {
+      "id": "node-fisher",
+      "type": "tool",
+      "data": { "label": "🧮 Teste de Fisher", "color": "#d97706" },
+      "position": { "x": 400, "y": 550 }
+    },
+    {
+      "id": "cond-p",
+      "type": "condition",
+      "data": { "label": "P < 0.05?" },
+      "position": { "x": 250, "y": 700 }
+    },
+    {
+      "id": "node-cramer",
+      "type": "tool",
+      "data": { "label": "📏 V de Cramer", "color": "#0f766e" },
+      "position": { "x": 100, "y": 850 }
+    },
+    {
+      "id": "end-success",
+      "type": "end",
+      "data": { "label": "🏆 Sucesso", "color": "#10b981" },
+      "position": { "x": 100, "y": 1000 }
+    },
+    {
+      "id": "end-h0",
+      "type": "end",
+      "data": { "label": "🛑 Aceitar H0", "color": "#94a3b8" },
+      "position": { "x": 400, "y": 850 }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "input-missao", "target": "node-base", "animated": true },
+    { "id": "e2", "source": "node-base", "target": "node-crosstab", "animated": true },
+    { "id": "e3", "source": "node-crosstab", "target": "node-bars", "animated": true },
+    { "id": "e4", "source": "node-bars", "target": "cond-n", "animated": true },
+    { "id": "e5", "source": "cond-n", "target": "node-chi2", "sourceHandle": "sim", "animated": true },
+    { "id": "e6", "source": "cond-n", "target": "node-fisher", "sourceHandle": "nao", "animated": true },
+    { "id": "e7", "source": "node-chi2", "target": "cond-p", "animated": true },
+    { "id": "e8", "source": "node-fisher", "target": "cond-p", "animated": true },
+    { "id": "e9", "source": "cond-p", "target": "node-cramer", "sourceHandle": "sim", "animated": true },
+    { "id": "e10", "source": "cond-p", "target": "end-h0", "sourceHandle": "nao", "animated": true },
+    { "id": "e11", "source": "node-cramer", "target": "end-success", "animated": true }
+  ],
+  "metadata": {
+    "licaoId": "trilha-associacao-chi2",
+    "criadoEm": "2026-05-19T16:00:00.000Z"
   }
+}

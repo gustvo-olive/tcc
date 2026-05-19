@@ -7,6 +7,7 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -49,6 +50,8 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
 
   const [modalAberto, setModalAberto] = useState(false);
   const [modalConfig, setModalConfig] = useState({ titulo: '', conteudo: null });
+
+  const { screenToFlowPosition } = useReactFlow();
 
   // Widget para Resultados de Testes Estatísticos
   const WidgetTesteEstatistico = ({ nome, estatistica, pValor, interpretacao, cor }) => (
@@ -165,8 +168,60 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
           <text x="210" y="290" textAnchor="middle" fontSize="10" fill="#94a3b8">Horas de Estudo (X)</text>
           <text x="10" y="150" textAnchor="middle" fontSize="10" fill="#94a3b8" transform="rotate(-90 10,150)">Nota Final (Y)</text>
         </svg>
-        <div style={{ marginTop: '20px', fontSize: '12px', color: '#64748b', background: '#f1f5f9', padding: '10px', borderRadius: '8px' }}>
-          💡 <strong>Dica PBL:</strong> Se os pontos seguem uma direção (ex: subindo da esquerda para a direita), existe uma correlação positiva!
+        <div style={{ marginTop: '20px', fontSize: '12px', color: '#1e40af', background: '#e0f2fe', padding: '15px', borderRadius: '8px', border: '1px solid #bae6fd' }}>
+          <strong>💡 Por que este gráfico é importante?</strong><br />
+          Antes de calcular a correlação, você deve observar se os pontos seguem uma tendência linear (uma linha subindo ou descendo). Se os pontos estiverem aleatórios, o Pearson não terá sentido!
+        </div>
+      </div>
+    );
+  };
+
+  // Gráfico de Barras Agrupadas (Proporcional)
+  const StackedBarChart = ({ stats }) => {
+    const data = stats?.chi2?.tabela;
+    if (!data) return <p style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>Aguardando processamento do Qui-Quadrado...</p>;
+
+    const categoriasX = Object.keys(data);
+    const legendasY = Object.keys(Object.values(data)[0]);
+    const cores = ['#6366f1', '#f43f5e', '#10b981', '#f59e0b'];
+
+    return (
+      <div style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <h4 style={{ color: '#1e293b', marginBottom: '20px', textAlign: 'center' }}>📊 Proporção por Categoria</h4>
+        <div style={{ height: '300px', display: 'flex', alignItems: 'flex-end', gap: '40px', padding: '0 40px', borderBottom: '2px solid #cbd5e1' }}>
+          {categoriasX.map(cat => {
+            const valores = Object.values(data[cat]);
+            const total = valores.reduce((a, b) => a + b, 0);
+            
+            return (
+              <div key={cat} style={{ flex: 1, display: 'flex', flexDirection: 'column-reverse', height: '100%', position: 'relative' }}>
+                {valores.map((val, i) => (
+                  <div 
+                    key={i} 
+                    style={{ 
+                      width: '100%', 
+                      height: `${(val / total) * 100}%`, 
+                      background: cores[i % cores.length],
+                      transition: 'height 0.5s ease'
+                    }} 
+                    title={`${legendasY[i]}: ${val} (${((val/total)*100).toFixed(1)}%)`}
+                  />
+                ))}
+                <div style={{ position: 'absolute', bottom: '-25px', left: '50%', transform: 'translateX(-50%)', fontSize: '11px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                  {cat}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Legenda */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '40px', flexWrap: 'wrap' }}>
+          {legendasY.map((l, i) => (
+            <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ width: '12px', height: '12px', background: cores[i % cores.length], borderRadius: '2px' }} />
+              <span style={{ fontSize: '11px', color: '#64748b' }}>{l}</span>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -176,7 +231,40 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
     let conteudo = null;
     const lowerLabel = label.toLowerCase();
 
-    if (lowerLabel.includes('tabela')) {
+    if (lowerLabel.includes('tabela de contingência')) {
+      const tabela = stats?.chi2?.tabela;
+      conteudo = tabela ? (
+        <div style={{ padding: '10px' }}>
+          <h4 style={{ margin: '0 0 15px 0', color: '#475569', fontSize: '14px', textAlign: 'center' }}>📊 Frequências Observadas (Cruzamento)</h4>
+          <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr>
+                  <th style={{ borderBottom: '2px solid #e2e8f0', padding: '10px', textAlign: 'left', color: '#64748b' }}>Variável</th>
+                  {Object.keys(Object.values(tabela)[0]).map(col => (
+                    <th key={col} style={{ borderBottom: '2px solid #e2e8f0', padding: '10px', textAlign: 'center', color: '#64748b' }}>{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(tabela).map(([row, cols]) => (
+                  <tr key={row}>
+                    <td style={{ borderBottom: '1px solid #f1f5f9', padding: '10px', fontWeight: 'bold', color: '#1e293b' }}>{row}</td>
+                    {Object.values(cols).map((val, i) => (
+                      <td key={i} style={{ borderBottom: '1px solid #f1f5f9', padding: '10px', textAlign: 'center' }}>{val}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : <p style={{ textAlign: 'center', color: '#94a3b8' }}>Aguardando análise de associação...</p>;
+    }
+    else if (lowerLabel.includes('barras agrupadas')) {
+      conteudo = <StackedBarChart stats={stats} />;
+    }
+    else if (lowerLabel.includes('tabela') || lowerLabel.includes('base')) {
       conteudo = <DataTable data={dadosAtuais} />;
     } 
     else if (lowerLabel.includes('dispersão')) {
@@ -288,7 +376,6 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
       );
     }
     else if (lowerLabel.includes('qui-quadrado')) {
-      const tabela = stats?.chi2?.tabela;
       conteudo = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <WidgetTesteEstatistico 
@@ -298,31 +385,6 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
             interpretacao={stats?.chi2?.p < 0.05 ? "Há ASSOCIAÇÃO significativa entre as variáveis (P < 0.05). Rejeitamos H0." : "Sem evidência de associação significativa (P > 0.05). Aceitamos H0."}
             cor="#8b5cf6"
           />
-          {tabela && (
-            <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
-              <h4 style={{ margin: '0 0 15px 0', color: '#475569', fontSize: '14px', textAlign: 'center' }}>📊 Tabela de Contingência</h4>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr>
-                    <th style={{ borderBottom: '2px solid #e2e8f0', padding: '10px', textAlign: 'left', color: '#64748b' }}>Variável</th>
-                    {Object.keys(Object.values(tabela)[0]).map(col => (
-                      <th key={col} style={{ borderBottom: '2px solid #e2e8f0', padding: '10px', textAlign: 'center', color: '#64748b' }}>{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(tabela).map(([row, cols]) => (
-                    <tr key={row}>
-                      <td style={{ borderBottom: '1px solid #f1f5f9', padding: '10px', fontWeight: 'bold', color: '#1e293b' }}>{row}</td>
-                      {Object.values(cols).map((val, i) => (
-                        <td key={i} style={{ borderBottom: '1px solid #f1f5f9', padding: '10px', textAlign: 'center' }}>{val}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       );
     }
@@ -386,13 +448,6 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
               <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#10b981' }}>{stats?.n_atual || 0}</div>
             </div>
           </div>
-          <div style={{ marginTop: '25px', padding: '15px', background: '#f8fafc', borderRadius: '8px', textAlign: 'left', border: '1px solid #e2e8f0' }}>
-            <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#475569' }}>🔍 Impacto na Qualidade:</h4>
-            <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-              Esta ação reduziu a "sujeira" da base. A saúde atual da amostra é de <strong>{stats?.saude || 0}%</strong>. 
-              {stats?.erros_criticos > 0 ? ` Ainda restam ${stats.erros_criticos} inconsistências graves.` : ' Excelente! Não detectamos mais erros críticos nesta amostra.'}
-            </p>
-          </div>
         </div>
       );
     }
@@ -400,6 +455,22 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
     setModalConfig({ titulo: `Análise: ${label}`, conteudo });
     setModalAberto(true);
   }, []);
+
+  // Efeito para carregar dados iniciais automaticamente
+  useEffect(() => {
+    const carregarDadosIniciais = async () => {
+      try {
+        const response = await enviarGrafoParaProcessamento([], [], licaoId);
+        if (response.preview) {
+          setDadosReais(response.preview);
+          setEstatisticas(response.estatisticas);
+        }
+      } catch (err) {
+        console.warn("Falha ao pré-carregar dados:", err);
+      }
+    };
+    carregarDadosIniciais();
+  }, [licaoId]);
 
   useEffect(() => {
     let textoMissao = '🎯 Missão: Investigue a Hipótese';
@@ -412,7 +483,7 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
 
     setNodes([{ 
       id: 'pergunta-1', position: { x: 250, y: 30 }, 
-      data: { label: textoMissao, onConfig: () => abrirWidget('Missão', [], null) }, 
+      data: { label: textoMissao, onConfig: () => abrirWidget('Missão', dadosReais, estatisticas) }, 
       type: 'input', draggable: false, 
       style: { background: '#000000', color: '#ffffff', fontWeight: 'bold', width: 450, borderRadius: '8px', padding: '15px', textAlign: 'center', fontSize: '14px', border: '3px solid #6366f1' } 
     }]);
@@ -434,9 +505,14 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
   );
 
   const addBlock = (label, color, tipo = 'default', icon = '⚙️') => {
+    const center = screenToFlowPosition({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    });
+
     const newNode = {
       id: `node-${Date.now()}`, 
-      position: { x: Math.random() * 100 + 150, y: Math.random() * 100 + 150 },
+      position: { x: center.x - 75, y: center.y - 50 },
       data: { label, color, icon, onConfig: () => abrirWidget(label, dadosReais, estatisticas) },
       type: tipo,
       style: (tipo === 'default') ? { background: color, color: 'white', fontWeight: 'bold', borderRadius: '8px', padding: '10px', fontSize: '13px' } : undefined
@@ -684,7 +760,10 @@ except Exception as e:
           <>
             <Tooltip conceito={`Gera um Boxplot comparando a distribuição das notas por ${licaoId === 'trilha-dois-grupos' ? 'gênero' : 'faixas de renda'}.`} quando="Quiser visualizar a dispersão dos dados antes de qualquer teste.">
               <button 
-                onClick={() => addBlock(licaoId === 'trilha-dois-grupos' ? '📉 Boxplot de Gênero' : '📉 Boxplot de Renda', '#0891b2', 'tool', '📈')} 
+                onClick={() => {
+                  const label = licaoId === 'trilha-dois-grupos' ? '📉 Boxplot de Gênero' : '📉 Boxplot de Renda';
+                  addBlock(label, '#0891b2', 'tool', '📈');
+                }} 
                 style={UI_STYLES.btnStyle}
               >
                 + Ver Distribuição
@@ -698,9 +777,27 @@ except Exception as e:
             <Tooltip conceito="Teste de normalidade mais sensível e preciso." quando="Para amostras menores (N &lt; 50). Mais rigoroso que o K-S."><button onClick={() => addBlock('⚖️ Shapiro-Wilk', '#a855f7', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Shapiro-Wilk</button></Tooltip>
 
             <h4 style={{ margin: '5px 0 0 0', color: '#475569', fontSize: '12px' }}>3. INFERÊNCIA</h4>
-            <Tooltip conceito="Mede a força e direção da relação linear entre duas variáveis contínuas." quando="Ambas as variáveis forem normais e a relação for linear (ex: Renda vs Nota)."><button onClick={() => addBlock('🧮 Pearson (r)', '#ef4444', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Pearson (Linear)</button></Tooltip>
-            <Tooltip conceito="Mede a relação de postos (rank) entre duas variáveis, não exigindo normalidade." quando="Os dados não forem normais ou a relação não for linear."><button onClick={() => addBlock('🧮 Spearman (ρ)', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Spearman (Postos)</button></Tooltip>
-            <Tooltip conceito="Testa se existe associação significativa entre duas variáveis categóricas." quando="Quiser saber se o tipo de escola (Pública/Privada) está associado ao acesso à internet."><button onClick={() => addBlock('🧮 Qui-Quadrado (χ²)', '#d97706', 'tool', '🎲')} style={UI_STYLES.btnStyle}>+ Qui-Quadrado</button></Tooltip>
+            {licaoId.includes('associacao') && (
+              <>
+                <Tooltip conceito="Cruza as frequências de duas variáveis categóricas em uma grade." quando="Quiser ver quantos alunos de cada tipo de escola têm ou não internet."><button onClick={() => addBlock('📊 Tabela de Contingência', '#0891b2', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Tabela de Contingência</button></Tooltip>
+                <Tooltip conceito="Visualiza a proporção de cada categoria através de barras coloridas." quando="Para uma comparação visual rápida entre grupos categóricos."><button onClick={() => addBlock('📊 Barras Agrupadas', '#6366f1', 'tool', '📊')} style={UI_STYLES.btnStyle}>+ Gráfico de Barras</button></Tooltip>
+              </>
+            )}
+
+            {(licaoId.includes('pearson') || !licaoId.includes('associacao')) && (
+              <>
+                <Tooltip conceito="Mede a força e direção da relação linear entre duas variáveis contínuas." quando="Ambas as variáveis forem normais e a relação for linear (ex: Renda vs Nota)."><button onClick={() => addBlock('🧮 Pearson (r)', '#ef4444', 'tool', '📈')} style={UI_STYLES.btnStyle}>+ Pearson (Linear)</button></Tooltip>
+                <Tooltip conceito="Mede a relação de postos (rank) entre duas variáveis, não exigindo normalidade." quando="Os dados não forem normais ou a relação não for linear."><button onClick={() => addBlock('🧮 Spearman (ρ)', '#16a34a', 'tool', '📉')} style={UI_STYLES.btnStyle}>+ Spearman (Postos)</button></Tooltip>
+              </>
+            )}
+            
+            {(licaoId.includes('chi2') || !licaoId.includes('associacao')) && (
+              <>
+                <Tooltip conceito="Ponto de decisão: todas as células da tabela possuem mais de 5 registros esperados?" quando="Para garantir a validade do teste de Qui-Quadrado."><button onClick={() => addBlock('Freq. Esperada > 5?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: N > 5?</button></Tooltip>
+                <Tooltip conceito="Testa se existe associação significativa entre duas variáveis categóricas." quando="Quiser saber se o tipo de escola (Pública/Privada) está associado ao acesso à internet."><button onClick={() => addBlock('🧮 Qui-Quadrado (χ²)', '#d97706', 'tool', '🎲')} style={UI_STYLES.btnStyle}>+ Qui-Quadrado</button></Tooltip>
+                <Tooltip conceito="Alternativa exata ao Qui-Quadrado para amostras pequenas ou tabelas desbalanceadas." quando="As frequências esperadas forem menores que 5."><button onClick={() => addBlock('🧮 Teste de Fisher', '#d97706', 'tool', '🧪')} style={UI_STYLES.btnStyle}>+ Teste de Fisher</button></Tooltip>
+              </>
+            )}
 
             <Tooltip conceito="Ponto de decisão: os dados seguem uma distribuição normal?" quando="Após rodar o Shapiro-Wilk ou K-S, para escolher o caminho certo."><button onClick={() => addBlock('É Normal?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: É Normal?</button></Tooltip>
             <Tooltip conceito="Teste paramétrico que compara as médias de 3 ou mais grupos." quando="Os dados forem normalmente distribuídos e as variâncias forem homogêneas."><button onClick={() => addBlock('🧮 ANOVA', '#ef4444', 'tool', '🧮')} style={UI_STYLES.btnStyle}>+ ANOVA</button></Tooltip>

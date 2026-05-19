@@ -14,10 +14,18 @@ class JuizEstatistico:
         self.licao_id = licao_id
         self.adj = self._build_adjacency_list()
         self.nos_alcancaveis = set()
-        self.id_base = self._find_node_id_by_label("Microdados") or self._find_node_id_by_label("Base")
         
-        if self.id_base:
-            self._run_dfs(self.id_base)
+        # O ponto de partida deve ser o nó do tipo 'input' (a pergunta)
+        id_inicio = self._find_node_id_by_type("input") or self._find_node_id_by_label("Base")
+        
+        if id_inicio:
+            self._run_dfs(id_inicio)
+
+    def _find_node_id_by_type(self, node_type: str) -> str:
+        for n in self.nodes:
+            if n.get('type') == node_type:
+                return n.get('id')
+        return None
 
     def _build_adjacency_list(self) -> Dict[str, List[str]]:
         adj = {n.get('id'): [] for n in self.nodes}
@@ -95,12 +103,14 @@ class JuizEstatistico:
         mapeamento_pesos = {} # id -> peso (para garantir soma correta)
         
         # Categorias de peso
-        CRITICOS = ["teste t", "mann-whitney", "anova", "kruskal", "pearson", "qui-quadrado"]
+        CRITICOS = ["teste t", "mann-whitney", "anova", "kruskal", "pearson", "spearman", "qui-quadrado"]
         ESSENCIAIS = ["microdados", "base", "kolmogorov", "shapiro", "levene", "sucesso", "normal?", "n > 5000?", "boxplot", "dispersão", "cramer"]
         
         for node in flow_data["nodes"]:
             label = node.get('data', {}).get('label', '')
-            if label and "🎯" not in label and "DESAFIO" not in label:
+            node_type = node.get('type', '')
+            
+            if label and "🎯" not in label and "DESAFIO" not in label and node_type != "input":
                 nid = node['id']
                 nos_esperados[nid] = label
                 

@@ -141,8 +141,6 @@ def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
         # 2. Executa Motor de Analytics
         if payload.licao_id == "trilha-limpeza":
             res = analytics.processar_limpeza(payload.nodes)
-        elif "trilha-associacao" in payload.licao_id:
-            res = analytics.processar_associacao()
         else:
             res = analytics.processar_inferencia(payload.licao_id)
 

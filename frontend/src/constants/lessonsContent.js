@@ -150,29 +150,48 @@ export const TRILHAS_CONTENT = {
     ]
   },
   'trilha-associacao-pearson': {
-    titulo: "Desafio 1: Renda vs Desempenho (Pearson)",
+    titulo: "Desafio 1: Horas de Estudo vs Nota Final (Pearson)",
     fases: [
       {
         id: 1,
-        titulo: "O Questionamento PBL",
+        titulo: "Fase 1: O Questionamento PBL",
         conteudo: [
-          { tipo: "missao", valor: "QUESTÃO: Existe uma relação linear entre a Renda Familiar do aluno e a sua Nota Final?" },
-          { tipo: "texto", valor: "Neste desafio, você deve usar a estatística para provar se, à medida que a renda sobe, a nota também sobe de forma proporcional." }
+          { tipo: "missao", valor: "QUESTÃO: Existe uma relação linear entre o tempo dedicado aos estudos e o desempenho final no exame?" },
+          { tipo: "texto", valor: "Diferente da comparação de grupos (onde vemos quem tirou nota maior), na associação queremos saber se duas variáveis 'caminham juntas'. Se eu estudo mais horas, minha nota tende a subir?" }
         ]
       },
       {
         id: 2,
-        titulo: "Ferramenta de Escolha: Pearson",
+        titulo: "Fase 2: Validação Visual (Linearidade)",
         conteudo: [
-          { tipo: "texto", valor: "Como Renda e Nota são valores numéricos contínuos, a ferramenta ideal é o r de Pearson." },
-          { tipo: "dica", valor: "💡 Lembre-se: O Pearson exige que as variáveis sigam a distribuição normal. Verifique isso antes!" }
+          { tipo: "texto", valor: "Antes de calcular números, usamos o GRÁFICO DE DISPERSÃO (Scatter Plot). Ele coloca os pontos em um plano X/Y." },
+          { tipo: "dica", valor: "💡 Procure por uma 'nuvem' de pontos que aponte para cima ou para baixo. Se os pontos parecerem uma explosão aleatória, a correlação será próxima de zero!" }
         ]
       },
       {
         id: 3,
-        titulo: "Missão no Canvas",
+        titulo: "Fase 3: O Pressuposto da Normalidade",
         conteudo: [
-          { tipo: "missao", valor: "Sua tarefa: \n1. Carregar a Base de Associação \n2. Testar a Normalidade \n3. Rodar a Correlação de Pearson \n4. Interpretar se o r é positivo e forte." }
+          { tipo: "texto", valor: "A Correlação de Pearson é um teste exigente (paramétrico). Ele só é confiável se as variáveis seguirem a Curva Normal." },
+          { tipo: "conceito", titulo: "A Bifurcação da Correlação", valor: "Se os dados forem NORMAIS -> Use Pearson (r).\nSe os dados NÃO forem normais -> Use Spearman (ρ)." },
+          { tipo: "alerta", valor: "🚨 No ENEM, como o N é muito grande, pequenas fugas da normalidade são comuns. Use o Kolmogorov-Smirnov para decidir o caminho!" }
+        ]
+      },
+      {
+        id: 4,
+        titulo: "Fase 4: Interpretando o Coeficiente (r)",
+        conteudo: [
+          { tipo: "texto", valor: "O resultado varia sempre entre -1 e +1." },
+          { tipo: "conceito", titulo: "+1 (Correlação Positiva Perfeita)", valor: "As duas sobem juntas. Ex: Mais estudo = Mais nota." },
+          { tipo: "conceito", titulo: "-1 (Correlação Negativa Perfeita)", valor: "Uma sobe, a outra desce. Ex: Mais faltas = Menos nota." },
+          { tipo: "dica", valor: "💡 Valores acima de 0.7 são considerados fortes. Valores abaixo de 0.3 são fracos (mesmo que o p-valor seja 0.00)." }
+        ]
+      },
+      {
+        id: 5,
+        titulo: "Fase 5: Missão no Canvas",
+        conteudo: [
+          { tipo: "missao", valor: "Sua tarefa: \n1. Carregar a Base de Associação \n2. Validar a relação via Gráfico de Dispersão \n3. Testar a Normalidade (K-S ou Shapiro) \n4. Rodar a Correlação correta (Pearson ou Spearman) \n5. Checar a significância (P < 0.05)." }
         ]
       }
     ]
@@ -182,25 +201,41 @@ export const TRILHAS_CONTENT = {
     fases: [
       {
         id: 1,
-        titulo: "O Questionamento PBL",
+        titulo: "Fase 1: O Questionamento categórico",
         conteudo: [
           { tipo: "missao", valor: "QUESTÃO: O acesso à internet depende do tipo de escola (Pública ou Privada)?" },
-          { tipo: "texto", valor: "Não estamos falando de notas aqui, mas de CATEGORIAS. Queremos saber se ser de escola privada aumenta as chances de ter internet em casa." }
+          { tipo: "texto", valor: "Aqui não temos notas numéricas, mas CATEGORIAS (Sim/Não, Pública/Privada). Queremos saber se essas categorias são INDEPENDENTES ou se estão 'amarradas'." }
         ]
       },
       {
         id: 2,
-        titulo: "Ferramenta de Escolha: Qui-Quadrado (χ²)",
+        titulo: "Fase 2: Tabela de Contingência",
         conteudo: [
-          { tipo: "texto", valor: "Para cruzar duas categorias (Tipo de Escola vs Internet), usamos o teste de Qui-Quadrado e a Tabela de Contingência." },
-          { tipo: "conceito", titulo: "V de Cramer", valor: "Não esqueça de calcular o V de Cramer para ver se essa associação é forte ou apenas uma pequena tendência." }
+          { tipo: "texto", valor: "Para analisar categorias, cruzamos as frequências em uma tabela. Quantos alunos de escola privada têm internet? E de pública?" },
+          { tipo: "dica", valor: "💡 O motor de Qui-Quadrado compara o que observamos na base com o que seria 'esperado' se não houvesse relação nenhuma. Grandes diferenças indicam associação!" }
         ]
       },
       {
         id: 3,
-        titulo: "Missão no Canvas",
+        titulo: "Fase 3: Pressuposto Amostral (Qui-Quadrado vs Fisher)",
         conteudo: [
-          { tipo: "missao", valor: "Sua tarefa: \n1. Carregar a Base de Associação \n2. Adicionar o bloco de Qui-Quadrado \n3. Analisar a Tabela de Contingência no widget \n4. Confirmar a associação com o P-valor < 0.05." }
+          { tipo: "texto", valor: "O Qui-Quadrado (χ²) tem uma regra de ouro: ele precisa de dados suficientes em cada célula da tabela." },
+          { tipo: "alerta", valor: "🚨 REGRA: Se alguma célula tiver 'Frequência Esperada' menor que 5, o Qui-Quadrado perde a precisão. Nesse caso, você DEVE usar o Teste Exato de Fisher." }
+        ]
+      },
+      {
+        id: 4,
+        titulo: "Fase 4: Intensidade (V de Cramér)",
+        conteudo: [
+          { tipo: "texto", valor: "O Qui-Quadrado diz SE há associação, mas não diz se ela é FORTE. Para isso, usamos o V de Cramér." },
+          { tipo: "conceito", titulo: "Escala do V", valor: "0.1 (Fraco), 0.3 (Moderado), 0.5+ (Forte). Use isso para provar a magnitude da desigualdade digital." }
+        ]
+      },
+      {
+        id: 5,
+        titulo: "Fase 5: Missão no Canvas",
+        conteudo: [
+          { tipo: "missao", valor: "Sua tarefa: \n1. Carregar a Base de Associação \n2. Gerar a Tabela de Contingência \n3. Validar se as células possuem N > 5 \n4. Executar Qui-Quadrado ou Fisher \n5. Calcular o V de Cramér para medir a força da relação." }
         ]
       }
     ]

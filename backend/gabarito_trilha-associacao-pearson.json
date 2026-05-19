@@ -1,40 +1,416 @@
 {
-    "nodes": [
-      {
-        "id": "node-base",
-        "data": { "label": "📊 Base de Dados" }
+  "nodes": [
+    {
+      "id": "pergunta-1",
+      "position": {
+        "x": 250,
+        "y": 30
       },
-      {
-        "id": "node-scatter",
-        "data": { "label": "📈 Gráfico de Dispersão" }
+      "data": {
+        "label": "Sua tarefa: \n1. Carregar a Base de Associação \n2. Testar a Normalidade \n3. Rodar a Correlação de Pearson \n4. Interpretar se o r é positivo e forte."
       },
-      {
-        "id": "node-n",
-        "data": { "label": "🧮 Contar N" }
+      "type": "input",
+      "draggable": false,
+      "style": {
+        "background": "#000000",
+        "color": "#ffffff",
+        "fontWeight": "bold",
+        "width": 450,
+        "borderRadius": "8px",
+        "padding": "15px",
+        "textAlign": "center",
+        "fontSize": "14px",
+        "border": "3px solid #6366f1"
       },
-      {
-        "id": "node-ks",
-        "data": { "label": "⚖️ Kolmogorov-Smirnov" }
-      },
-      {
-        "id": "node-pearson",
-        "data": { "label": "🧮 Pearson (r)" }
-      },
-      {
-        "id": "cond-p",
-        "data": { "label": "P < 0.05?" }
-      },
-      {
-        "id": "node-fim",
-        "data": { "label": "🏆 Sucesso" }
+      "measured": {
+        "width": 450,
+        "height": 99
       }
-    ],
-    "edges": [
-      { "source": "node-base", "target": "node-scatter" },
-      { "source": "node-scatter", "target": "node-n" },
-      { "source": "node-n", "target": "node-ks" },
-      { "source": "node-ks", "target": "node-pearson" },
-      { "source": "node-pearson", "target": "cond-p" },
-      { "source": "cond-p", "target": "node-fim" }
-    ]
+    },
+    {
+      "id": "node-1779204544783",
+      "position": {
+        "x": 357.9059408835479,
+        "y": 184.05494342304374
+      },
+      "data": {
+        "label": "📊 Base de Associação",
+        "color": "#2563eb",
+        "icon": "📊"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 209,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204568294",
+      "position": {
+        "x": 368.6733247001449,
+        "y": 337.7977841961985
+      },
+      "data": {
+        "label": "📈 Gráfico de Dispersão",
+        "color": "#6366f1",
+        "icon": "📈"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 218,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204571174",
+      "position": {
+        "x": 430.57145400012223,
+        "y": 513.241599670026
+      },
+      "data": {
+        "label": "🧮 Contar N",
+        "color": "#0891b2",
+        "icon": "🔢"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 154,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204577183",
+      "position": {
+        "x": 446.0807811822966,
+        "y": 700.5532957316542
+      },
+      "data": {
+        "label": "N > 5000?",
+        "color": "#eab308",
+        "icon": "⚙️"
+      },
+      "type": "condition",
+      "measured": {
+        "width": 100,
+        "height": 100
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204582831",
+      "position": {
+        "x": 554.5200371154077,
+        "y": 885.1233917095045
+      },
+      "data": {
+        "label": "⚖️ Kolmogorov-Smirnov",
+        "color": "#8b5cf6",
+        "icon": "📊"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 223,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204583215",
+      "position": {
+        "x": 236.08831699337995,
+        "y": 874.5259910833175
+      },
+      "data": {
+        "label": "⚖️ Shapiro-Wilk",
+        "color": "#a855f7",
+        "icon": "📈"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 175,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204595759",
+      "position": {
+        "x": 453.6977037007458,
+        "y": 1095.1338257578946
+      },
+      "data": {
+        "label": "É Normal?",
+        "color": "#eab308",
+        "icon": "⚙️"
+      },
+      "type": "condition",
+      "measured": {
+        "width": 100,
+        "height": 100
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204607695",
+      "position": {
+        "x": 596.9340731900282,
+        "y": 1279.4628645335822
+      },
+      "data": {
+        "label": "🧮 Pearson (r)",
+        "color": "#ef4444",
+        "icon": "📈"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 163,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204607984",
+      "position": {
+        "x": 212.14412636153938,
+        "y": 1282.7985241603517
+      },
+      "data": {
+        "label": "🧮 Spearman (ρ)",
+        "color": "#16a34a",
+        "icon": "📉"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 177,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204642729",
+      "position": {
+        "x": 684.2640212390203,
+        "y": 1632.294717203466
+      },
+      "data": {
+        "label": "🏆 Sucesso",
+        "color": "#10b981",
+        "icon": "⚙️"
+      },
+      "type": "end",
+      "measured": {
+        "width": 120,
+        "height": 44
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204643169",
+      "position": {
+        "x": 130.10565764546823,
+        "y": 1621.9206277925402
+      },
+      "data": {
+        "label": "🛑 Aceitar H0",
+        "color": "#94a3b8",
+        "icon": "⚙️"
+      },
+      "type": "end",
+      "measured": {
+        "width": 130,
+        "height": 44
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779204651921",
+      "position": {
+        "x": 455.6691478058983,
+        "y": 1426.1266555275874
+      },
+      "data": {
+        "label": "P < 0.05?",
+        "color": "#eab308",
+        "icon": "⚙️"
+      },
+      "type": "condition",
+      "measured": {
+        "width": 100,
+        "height": 100
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "pergunta-1",
+      "target": "node-1779204544783",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__pergunta-1-node-1779204544783"
+    },
+    {
+      "source": "node-1779204577183",
+      "sourceHandle": "sim",
+      "target": "node-1779204582831",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204577183sim-node-1779204582831"
+    },
+    {
+      "source": "node-1779204577183",
+      "sourceHandle": "nao",
+      "target": "node-1779204583215",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204577183nao-node-1779204583215"
+    },
+    {
+      "source": "node-1779204583215",
+      "target": "node-1779204595759",
+      "targetHandle": "top",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204583215-node-1779204595759top"
+    },
+    {
+      "source": "node-1779204582831",
+      "target": "node-1779204595759",
+      "targetHandle": "top",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204582831-node-1779204595759top"
+    },
+    {
+      "source": "node-1779204595759",
+      "sourceHandle": "sim",
+      "target": "node-1779204607695",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204595759sim-node-1779204607695"
+    },
+    {
+      "source": "node-1779204595759",
+      "sourceHandle": "nao",
+      "target": "node-1779204607984",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204595759nao-node-1779204607984"
+    },
+    {
+      "source": "node-1779204607984",
+      "target": "node-1779204651921",
+      "targetHandle": "top",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204607984-node-1779204651921top"
+    },
+    {
+      "source": "node-1779204607695",
+      "target": "node-1779204651921",
+      "targetHandle": "top",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204607695-node-1779204651921top"
+    },
+    {
+      "source": "node-1779204651921",
+      "sourceHandle": "sim",
+      "target": "node-1779204642729",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204651921sim-node-1779204642729"
+    },
+    {
+      "source": "node-1779204651921",
+      "sourceHandle": "nao",
+      "target": "node-1779204643169",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204651921nao-node-1779204643169"
+    },
+    {
+      "source": "node-1779204571174",
+      "target": "node-1779204577183",
+      "targetHandle": "top",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204571174-node-1779204577183top"
+    },
+    {
+      "source": "node-1779204568294",
+      "target": "node-1779204571174",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204568294-node-1779204571174"
+    },
+    {
+      "source": "node-1779204544783",
+      "target": "node-1779204568294",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1779204544783-node-1779204568294"
+    }
+  ],
+  "metadata": {
+    "licaoId": "trilha-associacao-pearson",
+    "criadoEm": "2026-05-19T15:31:59.763Z"
   }
+}

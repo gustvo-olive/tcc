@@ -45,10 +45,10 @@ export const TRILHAS_MODULO_2 = [
   },
   { 
     id: 'trilha-associacao-pearson', 
-    titulo: 'Desafio: Renda vs Desempenho', 
-    desc: 'Existe relação entre a renda e a nota? Teste a correlação de Pearson.',
+    titulo: 'Desafio: Horas de Estudo vs Nota Final', 
+    desc: 'Existe relação entre o tempo de estudo e a nota? Teste a correlação de Pearson.',
     icone: '📈',
-    objetivo: 'Provar associações lineares entre notas.'
+    objetivo: 'Provar associações lineares entre variáveis numéricas.'
   },
   { 
     id: 'trilha-associacao-chi2', 
