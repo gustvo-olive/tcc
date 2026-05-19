@@ -25,7 +25,15 @@ analytics = AnalizadorEstatistico(DATA_PATH, MINI_ENEM_PATH, ASSOC_PATH)
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ENEM DataAnalytics API")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+# Configuração de CORS robusta
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_db():
     db = SessionLocal()
