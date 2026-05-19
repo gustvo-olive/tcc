@@ -21,7 +21,7 @@ A trilha genérica de "Relações" foi dividida em dois desafios baseados em per
 
 ## 🛠️ 4. Correções e Refinamentos Finais
 - **Ajuste de Dados:** Corrigido o carregamento para que as trilhas de associação usem apenas a base didática (N=500), garantindo cálculos rápidos e precisos.
-- **Gráfico de Dispersão:** Implementado componente visual SVG no Canvas para que o aluno visualize a correlação antes dos testes.
+- **Gráfico de Dispersão e V de Cramer:** Implementados botões e componentes visuais SVG para visualização de correlação e cálculo de intensidade de associação.
 - **Scoring Flexível:** O Juiz agora dá nota **100/100** se o aluno chegar ao Sucesso sem erros de rigor, permitindo diferentes caminhos científicos válidos.
 - **Rebranding UI:** Renomeado "Microdados ENEM" para **"📊 Base de Dados"** em todo o sistema para maior consistência.
 
