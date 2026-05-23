@@ -70,11 +70,16 @@ def gerar_dados_didaticos():
     n_assoc = 500
     
     # Pearson: Correlação Forte Positiva
-    horas = np.random.uniform(1, 12, n_assoc)
-    # Nota depende das horas + um pouco de erro aleatório
-    nota = (horas * 70) + np.random.normal(0, 40, n_assoc) + 150
-    # Clippar notas entre 0 e 1000
-    nota = np.clip(nota, 0, 1000)
+    # Usamos distribuição normal pura sem clipping agressivo para passar nos testes
+    horas = np.random.normal(6.0, 1.5, n_assoc)
+    # Garante apenas que não temos valores negativos absurdos, mas sem achatar a calda
+    horas = np.maximum(0.5, horas) 
+    
+    # Nota depende das horas + erro normal
+    # Reduzimos o erro para manter a linearidade forte e a normalidade da nota
+    nota = (horas * 80) + np.random.normal(0, 25, n_assoc) + 100
+    # Clipping apenas nos extremos reais do ENEM para não distorcer a curva
+    nota = np.clip(nota, 10, 990)
     
     # Qui-Quadrado: Dependência óbvia entre Tipo de Escola e Acesso à Internet
     escola = np.random.choice(['Pública', 'Privada'], size=n_assoc, p=[0.75, 0.25])

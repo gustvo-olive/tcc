@@ -16,10 +16,10 @@ class JuizEstatistico:
         self.nos_alcancaveis = set()
         
         # O ponto de partida deve ser o nó do tipo 'input' (a pergunta)
-        id_inicio = self._find_node_id_by_type("input") or self._find_node_id_by_label("Base")
+        self.id_inicio = self._find_node_id_by_type("input") or self._find_node_id_by_label("Base")
         
-        if id_inicio:
-            self._run_dfs(id_inicio)
+        if self.id_inicio:
+            self._run_dfs(self.id_inicio)
 
     def _find_node_id_by_type(self, node_type: str) -> str:
         for n in self.nodes:
@@ -83,14 +83,14 @@ class JuizEstatistico:
                 "soma_total_pesos": 55
             },
             "trilha-associacao-pearson": {
-                "lista_labels": ["📊 Base de Associação", "🧮 Contar N", "⚖️ Shapiro-Wilk", "🧮 Pearson (r)", "🏆 Sucesso"],
-                "pesos": {"📊 Base de Associação": 10, "🧮 Contar N": 5, "⚖️ Shapiro-Wilk": 10, "🧮 Pearson (r)": 20, "🏆 Sucesso": 10},
+                "lista_labels": ["📊 Base de Dados", "🧮 Contar N", "⚖️ Shapiro-Wilk", "🧮 Pearson (r)", "🏆 Sucesso"],
+                "pesos": {"📊 Base de Dados": 10, "🧮 Contar N": 5, "⚖️ Shapiro-Wilk": 10, "🧮 Pearson (r)": 20, "🏆 Sucesso": 10},
                 "precedencias": {"🧮 Pearson (r)": ["⚖️ Shapiro-Wilk"], "🏆 Sucesso": ["🧮 Pearson (r)"]},
                 "soma_total_pesos": 55
             },
             "trilha-associacao-chi2": {
-                "lista_labels": ["📊 Base de Associação", "🧮 Qui-Quadrado (χ²)", "🏆 Sucesso"],
-                "pesos": {"📊 Base de Associação": 10, "🧮 Qui-Quadrado (χ²)": 20, "🏆 Sucesso": 10},
+                "lista_labels": ["📊 Base de Dados", "🧮 Qui-Quadrado (χ²)", "🏆 Sucesso"],
+                "pesos": {"📊 Base de Dados": 10, "🧮 Qui-Quadrado (χ²)": 20, "🏆 Sucesso": 10},
                 "precedencias": {"🏆 Sucesso": ["🧮 Qui-Quadrado (χ²)"]},
                 "soma_total_pesos": 40
             }
@@ -146,7 +146,7 @@ class JuizEstatistico:
         alertas = []
         pontos_aluno = 0
         
-        if not self.id_base:
+        if not self.id_inicio:
             return {"status": "erro_metodologico", "nota": 0, "erros": ["Base de Dados não encontrada!"], "patente": "Iniciante 🧪"}
 
         config = self.carregar_config_gabarito()

@@ -309,33 +309,47 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
       const interpretar = (val, tipo) => {
         val = Math.abs(val);
         if (tipo.includes('cohen')) {
-            if (val < 0.2) return { t: "Inexpressivo", c: "#94a3b8" };
-            if (val < 0.5) return { t: "Pequeno", c: "#3b82f6" };
-            if (val < 0.8) return { t: "Médio", c: "#f59e0b" };
-            return { t: "Grande", c: "#ef4444" };
+            if (val < 0.2) return { t: "Inexpressivo", c: "#94a3b8", v: 0 };
+            if (val < 0.5) return { t: "Pequeno", c: "#3b82f6", v: 1 };
+            if (val < 0.8) return { t: "Médio", c: "#f59e0b", v: 2 };
+            return { t: "Grande", c: "#ef4444", v: 3 };
         }
-        if (val < 0.1) return { t: "Desprezível", c: "#94a3b8" };
-        if (val < 0.3) return { t: "Fraco", c: "#3b82f6" };
-        if (val < 0.5) return { t: "Moderado", c: "#f59e0b" };
-        return { t: "Forte", c: "#ef4444" };
+        if (val < 0.1) return { t: "Desprezível", c: "#94a3b8", v: 0 };
+        if (val < 0.3) return { t: "Fraco", c: "#3b82f6", v: 1 };
+        if (val < 0.5) return { t: "Moderado", c: "#f59e0b", v: 2 };
+        return { t: "Forte", c: "#ef4444", v: 3 };
       };
+      
       const res = interpretar(valor, lowerLabel);
+      const escala = lowerLabel.includes('cohen') 
+        ? ["< 0.2: Pequeno", "0.2 - 0.5: Médio", "0.5 - 0.8: Grande", "> 0.8: Muito Grande"]
+        : ["< 0.1: Desprezível", "0.1 - 0.3: Fraco", "0.3 - 0.5: Moderado", "> 0.5: Forte"];
+
       conteudo = (
         <div style={{ textAlign: 'center', padding: '30px' }}>
           <h3 style={{ color: '#64748b', margin: 0 }}>{nomeEfeito} (Magnitude)</h3>
           <div style={{ fontSize: '72px', fontWeight: 'bold', color: res.c, margin: '15px 0' }}>{valor.toFixed(4)}</div>
-          <div style={{ padding: '10px 25px', background: res.c, color: 'white', borderRadius: '50px', display: 'inline-block', fontWeight: 'bold' }}>Impacto {res.t}</div>
+          <div style={{ padding: '10px 25px', background: res.c, color: 'white', borderRadius: '50px', display: 'inline-block', fontWeight: 'bold', marginBottom: '30px' }}>Impacto {res.t}</div>
           
-          {lowerLabel.includes('cohen') && (
-            <div style={{ marginTop: '30px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-               <h4 style={{ color: '#475569', fontSize: '14px', marginBottom: '10px' }}>📏 Tabela de Referência (Cohen):</h4>
-               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', fontSize: '11px' }}>
-                  <div style={{ padding: '5px', background: valor < 0.2 ? '#f1f5f9' : 'transparent', border: valor < 0.2 ? '1px solid #cbd5e1' : 'none' }}>0.2: Pequeno</div>
-                  <div style={{ padding: '5px', background: (valor >= 0.2 && valor < 0.5) ? '#f1f5f9' : 'transparent', border: (valor >= 0.2 && valor < 0.5) ? '1px solid #cbd5e1' : 'none' }}>0.5: Médio</div>
-                  <div style={{ padding: '5px', background: (valor >= 0.5) ? '#f1f5f9' : 'transparent', border: (valor >= 0.5) ? '1px solid #cbd5e1' : 'none' }}>0.8: Grande</div>
-               </div>
-            </div>
-          )}
+          <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+             <h4 style={{ color: '#475569', fontSize: '14px', marginBottom: '15px' }}>📏 Escala de Interpretação:</h4>
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                {escala.map((item, index) => (
+                  <div key={index} style={{ 
+                    padding: '10px 5px', 
+                    borderRadius: '8px',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    background: res.v === index ? res.c : '#f8fafc',
+                    color: res.v === index ? 'white' : '#64748b',
+                    border: res.v === index ? `1px solid ${res.c}` : '1px solid #e2e8f0',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    {item}
+                  </div>
+                ))}
+             </div>
+          </div>
         </div>
       );
     }
@@ -793,7 +807,7 @@ except Exception as e:
             
             {(licaoId.includes('chi2') || !licaoId.includes('associacao')) && (
               <>
-                <Tooltip conceito="Ponto de decisão: todas as células da tabela possuem mais de 5 registros esperados?" quando="Para garantir a validade do teste de Qui-Quadrado."><button onClick={() => addBlock('Freq. Esperada > 5?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: N > 5?</button></Tooltip>
+                <Tooltip conceito="Ponto de decisão: todas as células da tabela possuem mais de 5 registros esperados?" quando="Para garantir a validade do teste de Qui-Quadrado."><button onClick={() => addBlock('Freq. Esperada > 5?', '#eab308', 'condition')} style={UI_STYLES.btnStyle}>+ Condição: N &gt; 5?</button></Tooltip>
                 <Tooltip conceito="Testa se existe associação significativa entre duas variáveis categóricas." quando="Quiser saber se o tipo de escola (Pública/Privada) está associado ao acesso à internet."><button onClick={() => addBlock('🧮 Qui-Quadrado (χ²)', '#d97706', 'tool', '🎲')} style={UI_STYLES.btnStyle}>+ Qui-Quadrado</button></Tooltip>
                 <Tooltip conceito="Alternativa exata ao Qui-Quadrado para amostras pequenas ou tabelas desbalanceadas." quando="As frequências esperadas forem menores que 5."><button onClick={() => addBlock('🧮 Teste de Fisher', '#d97706', 'tool', '🧪')} style={UI_STYLES.btnStyle}>+ Teste de Fisher</button></Tooltip>
               </>

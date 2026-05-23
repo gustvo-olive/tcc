@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { enviarGrafoParaProcessamento } from '../../services/api';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
+import { unlockBadge } from '../../services/badgeService';
 
 const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
   const [steps, setSteps] = useState([]);
@@ -11,6 +12,7 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
   const [activeTab, setActiveTab] = useState('validos');
   const [showFullTable, setShowFullTable] = useState(false);
   const [configNode, setConfigNode] = useState(null);
+  const [isFinished, setIsFinished] = useState(false);
 
   // Colunas disponíveis na base (extraídas do preview)
   const columns = preview.length > 0 ? Object.keys(preview[0]) : [];
@@ -21,14 +23,16 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
     { id: 'ausentes', label: '🚫 Filtrar Ausentes', color: '#3b82f6', desc: 'Remove candidatos com SITUACAO != OK.' },
     { id: 'outliers', label: '🎯 Limpar Outliers', color: '#6366f1', desc: 'Remove idades > 120 e notas > 1000.', default_config: { idade_max: 120, nota_max: 1000 } },
     { id: 'duplicatas', label: '👥 Remover Duplicatas', color: '#8b5cf6', desc: 'Remove registros idênticos repetidos.' },
-    { id: 'padronizar', label: '⚙️ Padronizar Dados', color: '#a855f7', desc: 'Uniformiza formatos de datas ou moeda.', default_config: { colunas: [] } },
+    { id: 'padronizar', label: '⚙️ Padronizar Dados', color: '#a855f7', desc: 'Uniformiza formatos de datas ou moeda.', default_config: { colunas: [], formato_renda: 'moeda' } },
     { id: 'imputar', label: '🧪 Imputar Dados', color: '#ec4899', desc: 'Preenche nulos com a Média ou Mediana.', default_config: { coluna: '', metodo: 'mediana' } },
     { id: 'linguas', label: '🗣️ Agrupar Línguas', color: '#f59e0b', desc: 'Corrige variações (ex: Inglês, ING, ingles).' },
   ];
 
   const addStep = (block) => {
     if (steps.find(s => s.id === block.id)) return;
-    setSteps([...steps, { ...block, active: true, config: block.default_config || {} }]);
+    // Se o bloco tem configuração obrigatória, ele começa como 'ready: false'
+    const isReady = !block.default_config;
+    setSteps([...steps, { ...block, active: true, ready: isReady, config: block.default_config || {} }]);
   };
 
   const removeStep = (id) => {
@@ -36,15 +40,23 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
   };
 
   const handleUpdateConfig = (id, newConfig) => {
-    setSteps(steps.map(s => s.id === id ? { ...s, config: newConfig } : s));
+    setSteps(steps.map(s => s.id === id ? { ...s, config: newConfig, ready: true } : s));
     setConfigNode(null);
+  };
+
+  const finalizarPipeline = () => {
+    setIsFinished(true);
+    unlockBadge('completista');
   };
 
   // Sincroniza com o Backend toda vez que o pipeline muda
   useEffect(() => {
     const runPipeline = async () => {
       setLoading(true);
-      const mockNodes = steps.map(s => ({ 
+      // Filtra apenas passos que já foram configurados ou que não exigem config
+      const readySteps = steps.filter(s => s.ready);
+      
+      const mockNodes = readySteps.map(s => ({ 
         id: s.id, 
         data: { label: s.label, config: s.config } 
       }));
@@ -67,7 +79,7 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
     runPipeline();
   }, [steps, licaoId]);
 
-  const dataToDisplay = activeTab === 'validos' ? (showFullTable ? preview : preview.slice(0, 50)) : estatisticas.trash_preview;
+  const dataToDisplay = activeTab === 'validos' ? (showFullTable ? preview : preview.slice(0, 50)) : (estatisticas.trash_preview || []);
 
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', background: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
@@ -149,22 +161,25 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                    opacity: step.ready ? 1 : 0.8
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{ fontSize: '20px' }}>{step.label.split(' ')[0]}</div>
                         <div>
                             <div style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '14px' }}>{step.label.split(' ').slice(1).join(' ')}</div>
-                            <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '500' }}>Processamento ativo</div>
+                            <div style={{ fontSize: '10px', color: step.ready ? '#10b981' : '#f59e0b', fontWeight: '500' }}>
+                                {step.ready ? 'Processamento ativo' : '⚠️ Aguardando configuração'}
+                            </div>
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         {step.default_config && (
                             <button 
                                 onClick={() => setConfigNode(step)}
-                                style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}
+                                style={{ background: step.ready ? '#f1f5f9' : '#fff7ed', color: step.ready ? '#475569' : '#c2410c', border: step.ready ? '1px solid #e2e8f0' : '1px solid #fdba74', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}
                             >
-                                ⚙️ Configurar
+                                {step.ready ? '⚙️ Ajustar' : '⚙️ Configurar'}
                             </button>
                         )}
                         <button 
@@ -187,13 +202,62 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
               </>
             )}
 
-            {estatisticas.saude === 100 && (
+            {estatisticas.saude === 100 && !isFinished && (
                 <div style={{ marginTop: '30px' }}>
-                    <button style={{ padding: '15px 40px', background: '#10b981', color: 'white', border: 'none', borderRadius: '50px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)', fontSize: '16px' }}>
+                    <button 
+                        onClick={finalizarPipeline}
+                        style={{ padding: '15px 40px', background: '#10b981', color: 'white', border: 'none', borderRadius: '50px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)', fontSize: '16px' }}
+                    >
                         🏁 Finalizar Curadoria & Exportar
                     </button>
                 </div>
             )}
+
+            {isFinished && (
+                <div style={{ marginTop: '30px', background: '#dcfce7', padding: '20px 40px', borderRadius: '12px', border: '2px solid #10b981', textAlign: 'center', animation: 'badgeAppear 0.5s ease' }}>
+                    <div style={{ fontSize: '40px', marginBottom: '10px' }}>🏆</div>
+                    <h3 style={{ color: '#065f46', margin: '0' }}>Curadoria Concluída!</h3>
+                    <p style={{ color: '#047857', fontSize: '13px', margin: '10px 0 0 0' }}>Sua base de dados está 100% limpa e pronta para análises inferenciais.</p>
+                </div>
+            )}
+        </div>
+
+        {/* PREVIEW DA TABELA (DRAWER INFERIOR) */}
+        <div style={{ height: '300px', background: 'white', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '10px 20px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '20px' }}>
+                    <button 
+                        onClick={() => setActiveTab('validos')}
+                        style={{ background: 'none', border: 'none', padding: '5px 0', borderBottom: activeTab === 'validos' ? '2px solid #3b82f6' : 'none', color: activeTab === 'validos' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}
+                    >
+                        ✅ DADOS VÁLIDOS ({estatisticas.n_atual})
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('lixo')}
+                        style={{ background: 'none', border: 'none', padding: '5px 0', borderBottom: activeTab === 'lixo' ? '2px solid #ef4444' : 'none', color: activeTab === 'lixo' ? '#ef4444' : '#94a3b8', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}
+                    >
+                        🗑️ REMOVIDOS ({estatisticas.removidos})
+                    </button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    {loading && <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>⚡ CALCULANDO...</span>}
+                    <button 
+                        onClick={() => setShowFullTable(!showFullTable)}
+                        style={{ padding: '5px 12px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', color: '#475569' }}
+                    >
+                        {showFullTable ? 'Mostrar apenas 50' : 'Ver Tabela Completa (500)'}
+                    </button>
+                </div>
+            </div>
+            <div style={{ flex: 1, overflow: 'auto' }}>
+                {dataToDisplay.length > 0 ? (
+                    <DataTable data={dataToDisplay} />
+                ) : (
+                    <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
+                        {activeTab === 'lixo' ? 'Nenhum registro foi removido ainda.' : 'Carregando dados...'}
+                    </div>
+                )}
+            </div>
         </div>
 
         {/* MODAL DE CONFIGURAÇÃO */}
@@ -265,7 +329,7 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
 
             {configNode?.id === 'padronizar' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <p style={{ fontSize: '14px', color: '#64748b' }}>Selecione as colunas que possuem formatos inconsistentes (Datas com barras/traços ou Rendas com R$/Vírgulas). O sistema aplicará a melhor conversão para cada tipo.</p>
+                    <p style={{ fontSize: '14px', color: '#64748b' }}>Selecione as colunas que possuem formatos inconsistentes. O sistema aplicará a melhor conversão para cada tipo.</p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
                         {columns.map(col => (
                             <label key={col} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', cursor: 'pointer', padding: '10px', background: (col === 'DATA_INSCRICAO' || col === 'RENDA_BRUTA') ? '#f0f9ff' : 'transparent', borderRadius: '8px', border: (col === 'DATA_INSCRICAO' || col === 'RENDA_BRUTA') ? '1px solid #bae6fd' : '1px solid transparent' }}>
@@ -283,6 +347,28 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
                             </label>
                         ))}
                     </div>
+
+                    {configNode.config.colunas.includes('RENDA_BRUTA') && (
+                        <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '10px' }}>FORMATO DA RENDA</label>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                {[
+                                    { id: 'moeda', label: 'R$ 1.234,56' },
+                                    { id: 'float', label: '1234.56' },
+                                    { id: 'inteiro', label: '1234' }
+                                ].map(f => (
+                                    <button 
+                                        key={f.id}
+                                        onClick={() => setConfigNode({ ...configNode, config: { ...configNode.config, formato_renda: f.id } })}
+                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', background: configNode.config.formato_renda === f.id ? '#e0f2fe' : 'white', color: configNode.config.formato_renda === f.id ? '#0369a1' : '#64748b', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                                    >
+                                        {f.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <button 
                         onClick={() => handleUpdateConfig(configNode.id, configNode.config)}
                         style={{ alignSelf: 'flex-end', padding: '10px 25px', background: '#a855f7', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
@@ -335,44 +421,6 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
                 </div>
             )}
         </Modal>
-
-        {/* PREVIEW DA TABELA (DRAWER INFERIOR) */}
-        <div style={{ height: '300px', background: 'white', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '10px 20px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '20px' }}>
-                    <button 
-                        onClick={() => setActiveTab('validos')}
-                        style={{ background: 'none', border: 'none', padding: '5px 0', borderBottom: activeTab === 'validos' ? '2px solid #3b82f6' : 'none', color: activeTab === 'validos' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}
-                    >
-                        ✅ DADOS VÁLIDOS ({estatisticas.n_atual})
-                    </button>
-                    <button 
-                        onClick={() => setActiveTab('lixo')}
-                        style={{ background: 'none', border: 'none', padding: '5px 0', borderBottom: activeTab === 'lixo' ? '2px solid #ef4444' : 'none', color: activeTab === 'lixo' ? '#ef4444' : '#94a3b8', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}
-                    >
-                        🗑️ REMOVIDOS ({estatisticas.removidos})
-                    </button>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    {loading && <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>⚡ CALCULANDO...</span>}
-                    <button 
-                        onClick={() => setShowFullTable(!showFullTable)}
-                        style={{ padding: '5px 12px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', color: '#475569' }}
-                    >
-                        {showFullTable ? 'Mostrar apenas 50' : 'Ver Tabela Completa (500)'}
-                    </button>
-                </div>
-            </div>
-            <div style={{ flex: 1, overflow: 'auto' }}>
-                {dataToDisplay.length > 0 ? (
-                    <DataTable data={dataToDisplay} />
-                ) : (
-                    <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
-                        {activeTab === 'lixo' ? 'Nenhum registro foi removido ainda.' : 'Carregando dados...'}
-                    </div>
-                )}
-            </div>
-        </div>
       </div>
     </div>
   );

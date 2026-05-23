@@ -15,9 +15,10 @@ const BadgesPanel = () => {
     return () => window.removeEventListener('badge-unlocked', handler);
   }, []);
 
-  const totalUnlocked = unlocked.length;
+  const uniqueUnlocked = [...new Set(unlocked.filter(id => BADGES.some(b => b.id === id)))];
+  const totalUnlocked = uniqueUnlocked.length;
   const total = BADGES.length;
-  const pct = Math.round((totalUnlocked / total) * 100);
+  const pct = Math.min(100, Math.round((totalUnlocked / total) * 100));
 
   return (
     <div style={{
@@ -69,7 +70,7 @@ const BadgesPanel = () => {
                 gap: '8px',
                 padding: '18px 12px',
                 borderRadius: '12px',
-                border: isDesbloqueado ? `2px solid ${badge.cor}` : '2px solid #e2e8f0',
+                border: isDesbloqueado ? `2px solid ${badge.cor}` : '2px solid #e0e7ff',
                 background: isDesbloqueado ? `${badge.cor}15` : '#f8fafc',
                 transition: 'transform 0.2s, box-shadow 0.2s',
                 cursor: 'default',

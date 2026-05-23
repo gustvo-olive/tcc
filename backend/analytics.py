@@ -33,36 +33,38 @@ class AnalizadorEstatistico:
         df = df_original.copy()
         n_original = len(df)
         
-        labels_ativos = [n.get('data', {}).get('label', '').lower() for n in nodes]
-        configs = {n.get('data', {}).get('label', '').lower(): n.get('data', {}).get('config', {}) for n in nodes}
+        # Mapeia configurações por ID do nó para maior robustez
+        node_ids = [n.get('id') for n in nodes]
+        configs = {n.get('id'): n.get('data', {}).get('config', {}) for n in nodes}
         
-        # 1. Remoção de Nulos
-        if any("remover nulos" in l for l in labels_ativos):
-            c = next((v for k, v in configs.items() if "remover nulos" in k), {})
+        # 1. Remoção de Nulos (id: 'nulos')
+        if 'nulos' in node_ids:
+            c = configs.get('nulos', {})
             cols = c.get('colunas', ['NOTA_GERAL', 'IDADE', 'TP_SEXO'])
             if not cols: cols = ['NOTA_GERAL', 'IDADE', 'TP_SEXO']
             df = df.dropna(subset=cols)
         
-        # 2. Tratamento de Outliers
-        if any("limpar outliers" in l for l in labels_ativos) or any("tratar outliers" in l for l in labels_ativos):
-            c = next((v for k, v in configs.items() if "outliers" in k), {})
+        # 2. Tratamento de Outliers (id: 'outliers')
+        if 'outliers' in node_ids:
+            c = configs.get('outliers', {})
             idade_max = c.get('idade_max', 120)
             nota_max = c.get('nota_max', 1000)
             df = df[(df['IDADE'] >= 0) & (df['IDADE'] <= idade_max)]
             df = df[(df['NOTA_GERAL'].isna()) | (df['NOTA_GERAL'] <= nota_max)]
             
-        # 3. Filtro de Presença
-        if any("filtrar ausentes" in l for l in labels_ativos):
+        # 3. Filtro de Presença (id: 'ausentes')
+        if 'ausentes' in node_ids:
             df = df[df['SITUACAO'] == 'OK']
 
-        # 4. Remoção de Duplicatas
-        if any("remover duplicatas" in l for l in labels_ativos):
+        # 4. Remoção de Duplicatas (id: 'duplicatas')
+        if 'duplicatas' in node_ids:
             df = df.drop_duplicates()
         
-        # 5. Padronização Genérica (Datas e Moeda)
-        if any("padronizar dados" in l for l in labels_ativos):
-            c = next((v for k, v in configs.items() if "padronizar" in k), {})
+        # 5. Padronização Genérica (id: 'padronizar')
+        if 'padronizar' in node_ids:
+            c = configs.get('padronizar', {})
             cols_to_pad = c.get('colunas', [])
+            formato_renda = c.get('formato_renda', 'moeda')
             
             if not cols_to_pad:
                 cols_to_pad = [col for col in ['DATA_INSCRICAO', 'RENDA_BRUTA'] if col in df.columns]
@@ -86,21 +88,23 @@ class AnalizadorEstatistico:
                             except: return np.nan
                         return float(val) if val is not None else np.nan
                     
-                    if col == 'RENDA_BRUTA':
-                        df['RENDA_NUM'] = df[col].apply(fix_currency)
-                        df[col] = df['RENDA_NUM'].apply(lambda x: f"{x:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ',') if pd.notnull(x) else None)
-                    else:
-                        df[col] = df[col].apply(fix_currency)
+                    vals_float = df[col].apply(fix_currency)
+                    
+                    if formato_renda == 'moeda':
+                        df[col] = vals_float.apply(lambda x: f"R$ {x:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ',') if pd.notnull(x) else None)
+                    elif formato_renda == 'float':
+                        df[col] = vals_float
+                    elif formato_renda == 'inteiro':
+                        df[col] = vals_float.apply(lambda x: int(x) if pd.notnull(x) else None)
 
-        # 6. Imputação de Dados (Nova Funcionalidade)
-        if any("imputar dados" in l for l in labels_ativos):
-            c = next((v for k, v in configs.items() if "imputar" in k), {})
+        # 6. Imputação de Dados (id: 'imputar')
+        if 'imputar' in node_ids:
+            c = configs.get('imputar', {})
             col_alvo = c.get('coluna')
             metodo = c.get('metodo', 'mediana')
             
             if col_alvo and col_alvo in df.columns:
-                # Garante que a coluna é numérica para o cálculo
-                if 'RENDA_BRUTA' in col_alvo: # Caso especial: usa o valor numérico
+                if 'RENDA_BRUTA' in col_alvo:
                     temp_col = df['RENDA_BRUTA'].apply(lambda x: float(str(x).replace('R$', '').replace('.', '').replace(',', '.')) if pd.notnull(x) else np.nan)
                     val_fill = temp_col.mean() if metodo == 'media' else temp_col.median()
                     df[col_alvo] = df[col_alvo].fillna(f"R$ {val_fill:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ','))
@@ -108,24 +112,23 @@ class AnalizadorEstatistico:
                     try:
                         val_fill = df[col_alvo].mean() if metodo == 'media' else df[col_alvo].median()
                         df[col_alvo] = df[col_alvo].fillna(val_fill)
-                    except:
-                        pass # Ignora se a coluna não for numérica
+                    except: pass
 
-        # 7. Agrupamento de Línguas
-        if any("agrupar línguas" in l for l in labels_ativos):
+        # 7. Agrupamento de Línguas (id: 'linguas')
+        if 'linguas' in node_ids:
             map_linguas = {'ingles': 'INGLÊS', 'inglês': 'INGLÊS', 'ing': 'INGLÊS', 'espanhol': 'ESPANHOL', 'esp': 'ESPANHOL'}
             df['LINGUA'] = df['LINGUA'].astype(str).str.lower().str.strip().replace(map_linguas).str.upper()
 
         df_trash = df_original[~df_original.index.isin(df.index)]
         trash_preview = df_trash.head(20).where(pd.notnull(df_trash), None).to_dict(orient='records')
 
+        # Cálculo de Saúde
         erros_restantes = df['NOTA_GERAL'].isna().sum()
-        c_out = next((v for k, v in configs.items() if "outliers" in k), {'idade_max': 120, 'nota_max': 1000})
+        c_out = configs.get('outliers', {'idade_max': 120, 'nota_max': 1000})
         erros_restantes += len(df[(df['IDADE'] < 0) | (df['IDADE'] > c_out.get('idade_max', 120))])
         erros_restantes += df.duplicated().sum()
         
-        # Penaliza apenas se colunas críticas não foram padronizadas
-        if not any("padronizar" in l for l in labels_ativos):
+        if 'padronizar' not in node_ids:
             erros_restantes += 30
         
         saude = max(0, min(100, 100 - (erros_restantes * 1.5)))
