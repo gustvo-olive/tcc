@@ -8,23 +8,23 @@ export const TRILHAS_MODULO_1 = [
   { 
     id: 'trilha-limpeza', 
     titulo: 'Limpeza de Microdados', 
-    desc: 'Remova valores nulos, lide com candidatos ausentes e prepare a base para análise.',
+    desc: 'Remova valores nulos, padronize moedas e prepare a base inicial.',
     icone: '🧼',
-    objetivo: 'Garantir a integridade dos dados iniciais.'
+    objetivo: 'Garantir a integridade dos dados brutos.'
   },
   { 
-    id: 'trilha-outliers', 
-    titulo: 'Tratamento de Outliers', 
-    desc: 'Identifique notas impossíveis ou candidatos atípicos usando métodos estatísticos.',
-    icone: '🎯',
-    objetivo: 'Evitar que valores extremos distorçam seus resultados.'
+    id: 'trilha-engenharia', 
+    titulo: 'Engenharia de Atributos', 
+    desc: 'Crie novas colunas, categorize idades e normalize notas para análises avançadas.',
+    icone: '🧪',
+    objetivo: 'Transformar dados brutos em inteligência estratégica.'
   },
   { 
     id: 'trilha-amostragem', 
     titulo: 'Técnicas de Amostragem', 
-    desc: 'Como trabalhar com milhões de dados sem travar seu computador? Aprenda amostragem aleatória e estratificada.',
+    desc: 'Extraia amostras representativas e aprenda a lidar com bases gigantes sem viés.',
     icone: '🎲',
-    objetivo: 'Criar subconjuntos representativos da população do ENEM.'
+    objetivo: 'Criar subconjuntos estatisticamente válidos.'
   }
 ];
 

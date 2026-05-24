@@ -14,6 +14,9 @@ class AnalizadorEstatistico:
         self.DATA_PATH = data_path
         self.MINI_ENEM_PATH = mini_enem_path
         self.ASSOC_PATH = assoc_path
+        self.BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        self.FEAT_PATH = os.path.join(self.BASE_DIR, 'data', 'base_engenharia_atributos.csv')
+        self.SAMPLING_PATH = os.path.join(self.BASE_DIR, 'data', 'base_amostragem_gigante.csv')
         self.df_global = None
         self.carregar_base_principal()
 
@@ -25,110 +28,163 @@ class AnalizadorEstatistico:
             except Exception as e:
                 print(f"❌ [Analytics] Erro base principal: {e}")
 
-    def processar_limpeza(self, nodes: List[Dict]) -> Dict:
-        if not os.path.exists(self.MINI_ENEM_PATH):
-            raise FileNotFoundError(f"Arquivo não encontrado: {self.MINI_ENEM_PATH}")
+    def processar_limpeza(self, nodes: List[Dict], base_type: str = "suja") -> Dict:
+        # Define qual base carregar
+        path_map = {
+            "suja": self.MINI_ENEM_PATH,
+            "feat": self.FEAT_PATH,
+            "sampling": self.SAMPLING_PATH
+        }
+        target_path = path_map.get(base_type, self.MINI_ENEM_PATH)
         
-        df_original = pd.read_csv(self.MINI_ENEM_PATH)
+        if not os.path.exists(target_path):
+            raise FileNotFoundError(f"Arquivo não encontrado: {target_path}")
+        
+        df_original = pd.read_csv(target_path)
         df = df_original.copy()
         n_original = len(df)
         
-        # Mapeia configurações por ID do nó para maior robustez
-        node_ids = [n.get('id') for n in nodes]
-        configs = {n.get('id'): n.get('data', {}).get('config', {}) for n in nodes}
-        
-        # 1. Remoção de Nulos (id: 'nulos')
-        if 'nulos' in node_ids:
-            c = configs.get('nulos', {})
-            cols = c.get('colunas', ['NOTA_GERAL', 'IDADE', 'TP_SEXO'])
-            if not cols: cols = ['NOTA_GERAL', 'IDADE', 'TP_SEXO']
-            df = df.dropna(subset=cols)
-        
-        # 2. Tratamento de Outliers (id: 'outliers')
-        if 'outliers' in node_ids:
-            c = configs.get('outliers', {})
-            idade_max = c.get('idade_max', 120)
-            nota_max = c.get('nota_max', 1000)
-            df = df[(df['IDADE'] >= 0) & (df['IDADE'] <= idade_max)]
-            df = df[(df['NOTA_GERAL'].isna()) | (df['NOTA_GERAL'] <= nota_max)]
-            
-        # 3. Filtro de Presença (id: 'ausentes')
-        if 'ausentes' in node_ids:
-            df = df[df['SITUACAO'] == 'OK']
+        # PROCESSAMENTO SEQUENCIAL: Segue a ordem das ferramentas no pipeline
+        for node in nodes:
+            node_id = node.get('id')
+            c = node.get('data', {}).get('config', {})
 
-        # 4. Remoção de Duplicatas (id: 'duplicatas')
-        if 'duplicatas' in node_ids:
-            df = df.drop_duplicates()
-        
-        # 5. Padronização Genérica (id: 'padronizar')
-        if 'padronizar' in node_ids:
-            c = configs.get('padronizar', {})
-            cols_to_pad = c.get('colunas', [])
-            formato_renda = c.get('formato_renda', 'moeda')
+            # 1. Remoção de Nulos (id: 'nulos')
+            if node_id == 'nulos':
+                cols = c.get('colunas', [])
+                if not cols: cols = [col for col in ['NOTA_GERAL', 'NOTA_MATEMATICA', 'NOTA_REDACAO', 'IDADE'] if col in df.columns]
+                df = df.dropna(subset=cols)
             
-            if not cols_to_pad:
-                cols_to_pad = [col for col in ['DATA_INSCRICAO', 'RENDA_BRUTA'] if col in df.columns]
-
-            for col in cols_to_pad:
-                if 'DATA' in col.upper():
-                    def robust_date_parse(val):
-                        if not isinstance(val, str): return val
-                        for fmt in ("%d/%m/%y", "%d/%m/%Y", "%Y-%m-%d"):
-                            try: return pd.to_datetime(val, format=fmt).strftime('%d/%m/%Y')
-                            except: continue
-                        try: return pd.to_datetime(val).strftime('%d/%m/%Y')
-                        except: return None
-                    df[col] = df[col].apply(robust_date_parse)
+            # 2. Tratamento de Outliers (id: 'outliers')
+            elif node_id == 'outliers':
+                idade_max = c.get('idade_max', 120)
+                nota_max = c.get('nota_max', 1000)
+                if 'IDADE' in df.columns:
+                    df = df[(df['IDADE'] >= 0) & (df['IDADE'] <= idade_max)]
+                # Tenta limpar a nota principal disponível
+                col_nota = next((col for col in ['NOTA_GERAL', 'NOTA_MATEMATICA', 'NOTA_FINAL'] if col in df.columns), None)
+                if col_nota:
+                    df = df[(df[col_nota].isna()) | (df[col_nota] <= nota_max)]
                 
-                elif 'RENDA' in col.upper() or 'VALOR' in col.upper() or 'NOTA' in col.upper():
-                    def fix_currency(val):
-                        if isinstance(val, str):
-                            clean_val = val.replace('R$', '').replace('.', '').replace(',', '.').strip()
-                            try: return float(clean_val)
-                            except: return np.nan
-                        return float(val) if val is not None else np.nan
-                    
-                    vals_float = df[col].apply(fix_currency)
-                    
-                    if formato_renda == 'moeda':
-                        df[col] = vals_float.apply(lambda x: f"R$ {x:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ',') if pd.notnull(x) else None)
-                    elif formato_renda == 'float':
-                        df[col] = vals_float
-                    elif formato_renda == 'inteiro':
-                        df[col] = vals_float.apply(lambda x: int(x) if pd.notnull(x) else None)
+            # 3. Filtro de Presença (id: 'ausentes')
+            elif node_id == 'ausentes':
+                if 'SITUACAO' in df.columns:
+                    df = df[df['SITUACAO'] == 'OK']
 
-        # 6. Imputação de Dados (id: 'imputar')
-        if 'imputar' in node_ids:
-            c = configs.get('imputar', {})
-            col_alvo = c.get('coluna')
-            metodo = c.get('metodo', 'mediana')
+            # 4. Remoção de Duplicatas (id: 'duplicatas')
+            elif node_id == 'duplicatas':
+                df = df.drop_duplicates()
             
-            if col_alvo and col_alvo in df.columns:
-                if 'RENDA_BRUTA' in col_alvo:
-                    temp_col = df['RENDA_BRUTA'].apply(lambda x: float(str(x).replace('R$', '').replace('.', '').replace(',', '.')) if pd.notnull(x) else np.nan)
-                    val_fill = temp_col.mean() if metodo == 'media' else temp_col.median()
-                    df[col_alvo] = df[col_alvo].fillna(f"R$ {val_fill:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ','))
-                else:
-                    try:
-                        val_fill = df[col_alvo].mean() if metodo == 'media' else df[col_alvo].median()
-                        df[col_alvo] = df[col_alvo].fillna(val_fill)
-                    except: pass
+            # 5. Padronização Genérica (id: 'padronizar')
+            elif node_id == 'padronizar':
+                cols_to_pad = c.get('colunas', [])
+                formato_renda = c.get('formato_renda', 'moeda')
+                if not cols_to_pad:
+                    cols_to_pad = [col for col in ['DATA_INSCRICAO', 'RENDA_BRUTA'] if col in df.columns]
 
-        # 7. Agrupamento de Línguas (id: 'linguas')
-        if 'linguas' in node_ids:
-            map_linguas = {'ingles': 'INGLÊS', 'inglês': 'INGLÊS', 'ing': 'INGLÊS', 'espanhol': 'ESPANHOL', 'esp': 'ESPANHOL'}
-            df['LINGUA'] = df['LINGUA'].astype(str).str.lower().str.strip().replace(map_linguas).str.upper()
+                for col in cols_to_pad:
+                    if 'DATA' in col.upper():
+                        def robust_date_parse(val):
+                            if not isinstance(val, str): return val
+                            for fmt in ("%d/%m/%y", "%d/%m/%Y", "%Y-%m-%d"):
+                                try: return pd.to_datetime(val, format=fmt).strftime('%d/%m/%Y')
+                                except: continue
+                            try: return pd.to_datetime(val).strftime('%d/%m/%Y')
+                            except: return None
+                        df[col] = df[col].apply(robust_date_parse)
+                    
+                    elif 'RENDA' in col.upper() or 'VALOR' in col.upper() or 'NOTA' in col.upper():
+                        def fix_currency(val):
+                            if isinstance(val, str):
+                                clean_val = val.replace('R$', '').replace('.', '').replace(',', '.').strip()
+                                try: return float(clean_val)
+                                except: return np.nan
+                            return float(val) if val is not None else np.nan
+                        
+                        vals_float = df[col].apply(fix_currency)
+                        if formato_renda == 'moeda':
+                            df[col] = vals_float.apply(lambda x: f"R$ {x:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ',') if pd.notnull(x) else None)
+                        elif formato_renda == 'float':
+                            df[col] = vals_float
+                        elif formato_renda == 'inteiro':
+                            df[col] = vals_float.apply(lambda x: int(x) if pd.notnull(x) else None)
+
+            # 6. Imputação de Dados (id: 'imputar')
+            elif node_id == 'imputar':
+                col_alvo = c.get('coluna')
+                metodo = c.get('metodo', 'mediana')
+                if col_alvo and col_alvo in df.columns:
+                    if 'RENDA_BRUTA' in col_alvo:
+                        temp_col = df['RENDA_BRUTA'].apply(lambda x: float(str(x).replace('R$', '').replace('.', '').replace(',', '.')) if pd.notnull(x) else np.nan)
+                        val_fill = temp_col.mean() if metodo == 'media' else temp_col.median()
+                        df[col_alvo] = df[col_alvo].fillna(f"R$ {val_fill:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ','))
+                    else:
+                        try:
+                            val_fill = df[col_alvo].mean() if metodo == 'media' else df[col_alvo].median()
+                            df[col_alvo] = df[col_alvo].fillna(val_fill)
+                        except: pass
+
+            # 7. Média Ponderada (id: 'media_ponderada')
+            elif node_id == 'media_ponderada':
+                col1, peso1 = c.get('col1', 'NOTA_MATEMATICA'), c.get('peso1', 1)
+                col2, peso2 = c.get('col2', 'NOTA_REDACAO'), c.get('peso2', 1)
+                if col1 in df.columns and col2 in df.columns:
+                    df['NOTA_FINAL'] = (df[col1] * peso1 + df[col2] * peso2) / (peso1 + peso2)
+                    df['NOTA_FINAL'] = df['NOTA_FINAL'].round(2)
+
+            # 8. Categorizar Idade (id: 'binning_idade')
+            elif node_id == 'binning_idade':
+                col_idade = c.get('coluna', 'IDADE')
+                lim_j = c.get('limite_jovem', 25)
+                lim_a = c.get('limite_adulto', 60)
+                if col_idade in df.columns:
+                    def categorizar(idade):
+                        if idade <= lim_j: return "Jovem"
+                        if idade <= lim_a: return "Adulto"
+                        return "Idoso/Sênior"
+                    df['FAIXA_ETARIA'] = df[col_idade].apply(categorizar)
+
+            # 9. Normalizar Notas (id: 'normalizar')
+            elif node_id == 'normalizar':
+                col = c.get('coluna')
+                if col and col in df.columns:
+                    mi, ma = df[col].min(), df[col].max()
+                    if ma > mi:
+                        new_col = f"{col}_NORM"
+                        df[new_col] = (df[col] - mi) / (ma - mi)
+                        df[new_col] = df[new_col].round(4)
+
+            # 10. Amostragem Aleatória (id: 'amostra_simples')
+            elif node_id == 'amostra_simples':
+                n_sample = min(c.get('n', 500), len(df))
+                df = df.sample(n=n_sample, random_state=42)
+
+            # 11. Amostragem Estratificada (id: 'amostra_estratificada')
+            elif node_id == 'amostra_estratificada':
+                n_total = min(c.get('n', 500), len(df))
+                col_estrato = c.get('coluna', 'TP_ESCOLA')
+                if col_estrato in df.columns:
+                    df = df.groupby(col_estrato, group_keys=False).apply(lambda x: x.sample(int(np.rint(n_total*len(x)/len(df))))).sample(frac=1).reset_index(drop=True)
+
+            # 12. Agrupamento de Línguas (id: 'linguas')
+            elif node_id == 'linguas':
+                map_linguas = {'ingles': 'INGLÊS', 'inglês': 'INGLÊS', 'ing': 'INGLÊS', 'espanhol': 'ESPANHOL', 'esp': 'ESPANHOL'}
+                if 'LINGUA' in df.columns:
+                    df['LINGUA'] = df['LINGUA'].astype(str).str.lower().str.strip().replace(map_linguas).str.upper()
 
         df_trash = df_original[~df_original.index.isin(df.index)]
         trash_preview = df_trash.head(20).where(pd.notnull(df_trash), None).to_dict(orient='records')
 
-        # Cálculo de Saúde
-        erros_restantes = df['NOTA_GERAL'].isna().sum()
-        c_out = configs.get('outliers', {'idade_max': 120, 'nota_max': 1000})
-        erros_restantes += len(df[(df['IDADE'] < 0) | (df['IDADE'] > c_out.get('idade_max', 120))])
+        # Cálculo de Saúde Adaptativo
+        erros_restantes = 0
+        possiveis_notas = ['NOTA_GERAL', 'NOTA_MATEMATICA', 'NOTA_FINAL']
+        col_nota = next((c for c in possiveis_notas if c in df.columns), None)
+        if col_nota:
+            erros_restantes += df[col_nota].isna().sum()
+        if 'IDADE' in df.columns:
+            erros_restantes += len(df[(df['IDADE'] < 0) | (df['IDADE'] > 120)])
         erros_restantes += df.duplicated().sum()
-        
-        if 'padronizar' not in node_ids:
+        if base_type == "suja" and not any(n.get('id') == 'padronizar' for n in nodes):
             erros_restantes += 30
         
         saude = max(0, min(100, 100 - (erros_restantes * 1.5)))

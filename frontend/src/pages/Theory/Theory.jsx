@@ -5,15 +5,27 @@ import 'katex/dist/katex.min.css';
 import { BlockMath } from 'react-katex';
 
 const Theory = ({ licaoId, voltarAoDashboard, irParaCanvas }) => {
+  console.log("🔍 licaoId atual:", licaoId);
+  console.log("🔍 Existe no mapeamento?", !!TRILHAS_CONTENT[licaoId]);
+  console.log("🔍 Primeiras chaves:", Object.keys(TRILHAS_CONTENT).slice(0, 5));
   const [faseAtualIdx, setFaseAtualIdx] = useState(0);
   const trilha = TRILHAS_MODULO_2.find(t => t.id === licaoId) || TRILHAS_MODULO_1.find(t => t.id === licaoId);
   const conteudoDidatico = TRILHAS_CONTENT[licaoId];
 
   useEffect(() => {
-    // Carregar progresso salvo
+    // Carregar progresso salvo com trava de segurança para mudanças de conteúdo
     const progressoSalvo = localStorage.getItem(`progresso-${licaoId}`);
     if (progressoSalvo) {
-      setFaseAtualIdx(parseInt(progressoSalvo, 10));
+      const idx = parseInt(progressoSalvo, 10);
+      const totalDisponivel = TRILHAS_CONTENT[licaoId]?.fases?.length || 0;
+      
+      // Se o salvo for maior que o que existe hoje (ex: salvou fase 5 mas agora só tem 3)
+      if (idx >= totalDisponivel) {
+        setFaseAtualIdx(0);
+        localStorage.setItem(`progresso-${licaoId}`, '0');
+      } else {
+        setFaseAtualIdx(idx);
+      }
     } else {
       setFaseAtualIdx(0);
     }

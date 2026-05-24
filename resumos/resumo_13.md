@@ -19,8 +19,9 @@ Esta sessão focou em eliminar bugs residuais de interface e elevar o rigor téc
 - **Esclarecimento Teórico:** Reforçada a distinção entre o P-valor da Normalidade (onde P alto é bom) e o P-valor do Pearson (onde P baixo prova a relação).
 
 ## 🐛 4. Hotfixes Técnicos
-- **AttributeError (Backend):** Corrigida falha no Juiz Estatístico que não reconhecia o novo ponto de início (nó de Pergunta).
+- **AttributeError & KeyError (Backend):** Corrigida falha no Juiz Estatístico que não reconhecia as novas trilhas e erro no cálculo de integridade (Saúde) que quebrava em bases sem a coluna 'NOTA_GERAL'.
 - **JSX Syntax:** Corrigido erro de renderização no React causado pelo uso indevido do caractere `>` dentro de componentes.
+- **Roteamento Dinâmico:** Novas trilhas de Engenharia e Amostragem agora carregam seus respectivos datasets e ferramentas específicas automaticamente.
 
 ---
 

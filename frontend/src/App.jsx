@@ -88,7 +88,7 @@ export default function App() {
 
       {/* 4. Laboratório (Canvas ou Pipeline Linear dependendo do contexto) */}
       {paginaAtual === 'canvas' && (
-        licaoAtual === 'trilha-limpeza' ? (
+        ['trilha-limpeza', 'trilha-engenharia', 'trilha-amostragem'].includes(licaoAtual) ? (
           <CleaningPipeline 
             licaoId={licaoAtual}
             voltarAoMenu={() => setPaginaAtual('teoria')} 

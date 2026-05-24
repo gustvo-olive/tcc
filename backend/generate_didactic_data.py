@@ -103,9 +103,36 @@ def gerar_dados_didaticos():
     # mas o ideal é que os widgets usem as colunas novas.
     df_assoc['Q006'] = df_assoc['TP_ESCOLA'].map({'Pública': 'A', 'Privada': 'Q'})
     
-    df_assoc.to_csv(f'{data_dir}/base_associacao_didatica.csv', index=False)
+    # 3. Dataset para Trilha de Engenharia de Atributos (PBL)
+    print("🧪 Gerando base_engenharia_atributos.csv (500 linhas)...")
     
-    print("✅ Datasets didáticos de 500 linhas gerados com sucesso!")
+    # Gerando idades com viés para jovens (mais realista para o ENEM)
+    idades_jovens = np.random.randint(16, 24, size=350)
+    idades_adultos = np.random.randint(25, 65, size=150)
+    idades = np.concatenate([idades_jovens, idades_adultos])
+    np.random.shuffle(idades)
+
+    df_feat = pd.DataFrame({
+        'ID': range(1, 501),
+        'IDADE': idades,
+        'NOTA_MATEMATICA': np.random.randint(300, 950, size=500).astype(float),
+        'NOTA_REDACAO': np.random.randint(300, 950, size=500).astype(float),
+        'ESTADO_CIVIL': np.random.choice(['Solteiro', 'Casado', 'Divorciado'], size=500)
+    })
+    df_feat.to_csv(f'{data_dir}/base_engenharia_atributos.csv', index=False)
+
+    # 4. Dataset para Trilha de Amostragem (50.000 linhas)
+    print("📊 Gerando base_amostragem_gigante.csv (50.000 linhas)...")
+    n_gigante = 50000
+    df_gigante = pd.DataFrame({
+        'ID': range(1, n_gigante + 1),
+        'TP_ESCOLA': np.random.choice(['Pública', 'Privada'], size=n_gigante, p=[0.85, 0.15]),
+        'ESTADO_CIVIL': np.random.choice(['Solteiro', 'Casado', 'Divorciado', 'Viúvo'], size=n_gigante, p=[0.70, 0.20, 0.08, 0.02]),
+        'NOTA_FINAL': np.random.normal(550, 120, size=n_gigante).clip(0, 1000)
+    })
+    df_gigante.to_csv(f'{data_dir}/base_amostragem_gigante.csv', index=False)
+    
+    print("✅ Todos os datasets didáticos gerados com sucesso!")
 
 if __name__ == "__main__":
     gerar_dados_didaticos()

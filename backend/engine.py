@@ -93,6 +93,18 @@ class JuizEstatistico:
                 "pesos": {"📊 Base de Dados": 10, "🧮 Qui-Quadrado (χ²)": 20, "🏆 Sucesso": 10},
                 "precedencias": {"🏆 Sucesso": ["🧮 Qui-Quadrado (χ²)"]},
                 "soma_total_pesos": 40
+            },
+            "trilha-engenharia": {
+                "lista_labels": ["📊 Base de Dados", "🏆 Sucesso"],
+                "pesos": {"📊 Base de Dados": 10, "🏆 Sucesso": 10},
+                "precedencias": {},
+                "soma_total_pesos": 20
+            },
+            "trilha-amostragem": {
+                "lista_labels": ["📊 Base de Dados", "🏆 Sucesso"],
+                "pesos": {"📊 Base de Dados": 10, "🏆 Sucesso": 10},
+                "precedencias": {},
+                "soma_total_pesos": 20
             }
         }
         return defaults.get(self.licao_id, defaults["trilha-multiplos-grupos"])

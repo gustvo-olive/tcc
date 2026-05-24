@@ -102,7 +102,7 @@ export const TRILHAS_CONTENT = {
         titulo: "Fase 3: Os Porteiros (Normalidade e Levene)",
         conteudo: [
           { tipo: "texto", valor: "Antes de rodar o teste de comparação, você precisa passar pelos porteiros:" },
-          { tipo: "conceito", titulo: "Normalidade (N < 5000)", valor: "Use o Teste de Shapiro-Wilk. Ele verifica se os dados de cada grupo seguem a distribuição normal." },
+          { tipo: "conceito", titulo: "Normalidade (N < 5000)", valor: "Use o Teste de Shapiro-Wilk. Ele verifica se os dados de cada grupo seguem a distribution normal." },
           { tipo: "conceito", titulo: "Normalidade (N ≥ 5000)", valor: "Use o Kolmogorov-Smirnov (K-S). Para grandes volumes de dados (ENEM), ele é o padrão." },
           { tipo: "conceito", titulo: "Variância (Levene)", valor: "O Teste de Levene aqui é crucial. Se as variâncias forem diferentes, o Teste T padrão pode mentir. Fique atento ao P-valor!" }
         ]
@@ -150,120 +150,217 @@ export const TRILHAS_CONTENT = {
     ]
   },
   'trilha-associacao-pearson': {
-    titulo: "Desafio 1: Horas de Estudo vs Nota Final (Pearson)",
+    titulo: "Desafio: Renda vs Desempenho (Pearson)",
     fases: [
       {
         id: 1,
         titulo: "Fase 1: O Questionamento PBL",
         conteudo: [
-          { tipo: "missao", valor: "QUESTÃO: Existe uma relação linear entre o tempo dedicado aos estudos e o desempenho final no exame?" },
-          { tipo: "texto", valor: "Diferente da comparação de grupos (onde vemos quem tirou nota maior), na associação queremos saber se duas variáveis 'caminham juntas'. Se eu estudo mais horas, minha nota tende a subir?" }
+          { tipo: "missao", valor: "QUESTÃO: Existe uma relação linear entre a Renda Familiar do aluno e a sua Nota Final?" },
+          { tipo: "texto", valor: "Neste desafio, você deve usar a estatística para provar se, à medida que a renda sobe, a nota também sobe de forma proporcional." },
+          { tipo: "dica", valor: "💡 Pense: se descobrirmos que a renda dita a nota, o que isso diz sobre a igualdade de oportunidades no ENEM?" }
         ]
       },
       {
         id: 2,
-        titulo: "Fase 2: Validação Visual (Linearidade)",
+        titulo: "Fase 2: Exploração Visual (Scatter Plot)",
         conteudo: [
-          { tipo: "texto", valor: "Antes de calcular números, usamos o GRÁFICO DE DISPERSÃO (Scatter Plot). Ele coloca os pontos em um plano X/Y." },
-          { tipo: "dica", valor: "💡 Procure por uma 'nuvem' de pontos que aponte para cima ou para baixo. Se os pontos parecerem uma explosão aleatória, a correlação será próxima de zero!" }
+          { tipo: "texto", valor: "Antes de calcular números, olhamos o gráfico. O Gráfico de Dispersão mostra a 'nuvem' de pontos formada pelas duas variáveis." },
+          { tipo: "conceito", titulo: "Tendência Linear", valor: "Se os pontos formam uma subida da esquerda para a direita, a correlação é positiva. Se estiverem aleatórios, pode não haver relação nenhuma." }
         ]
       },
       {
         id: 3,
-        titulo: "Fase 3: O Pressuposto da Normalidade",
+        titulo: "Fase 3: O Pedágio da Normalidade",
         conteudo: [
-          { tipo: "texto", valor: "A Correlação de Pearson é um teste exigente (paramétrico). Ele só é confiável se as variáveis seguirem a Curva Normal." },
-          { tipo: "conceito", titulo: "A Bifurcação da Correlação", valor: "Se os dados forem NORMAIS -> Use Pearson (r).\nSe os dados NÃO forem normais -> Use Spearman (ρ)." },
-          { tipo: "alerta", valor: "🚨 No ENEM, como o N é muito grande, pequenas fugas da normalidade são comuns. Use o Kolmogorov-Smirnov para decidir o caminho!" }
+          { tipo: "texto", valor: "O r de Pearson é um teste 'Paramétrico'. Ele exige que os dados sigam a Distribuição Normal (Curva de Sino)." },
+          { tipo: "conceito", titulo: "Shapiro ou Kolmogorov?", valor: "Use Shapiro-Wilk para amostras menores (N < 5000) e Kolmogorov-Smirnov para grandes volumes. Se o P-valor for > 0.05, a porta está aberta para o Pearson!" },
+          { tipo: "alerta", valor: "🚨 Se a normalidade falhar, o rigor científico exige o uso do r de Spearman." }
         ]
       },
       {
         id: 4,
-        titulo: "Fase 4: Interpretando o Coeficiente (r)",
+        titulo: "Fase 4: A Força da Relação (r de Pearson)",
         conteudo: [
-          { tipo: "texto", valor: "O resultado varia sempre entre -1 e +1." },
-          { tipo: "conceito", titulo: "+1 (Correlação Positiva Perfeita)", valor: "As duas sobem juntas. Ex: Mais estudo = Mais nota." },
-          { tipo: "conceito", titulo: "-1 (Correlação Negativa Perfeita)", valor: "Uma sobe, a outra desce. Ex: Mais faltas = Menos nota." },
-          { tipo: "dica", valor: "💡 Valores acima de 0.7 são considerados fortes. Valores abaixo de 0.3 são fracos (mesmo que o p-valor seja 0.00)." }
+          { tipo: "texto", valor: "O coeficiente 'r' diz o quanto uma variável 'explica' a outra. Ele varia de -1 a +1." },
+          { tipo: "formula", valor: "r = \\frac{\\sum (x_i - \\bar{x})(y_i - \\bar{y})}{\\sqrt{\\sum (x_i - \\bar{x})^2 \\sum (y_i - \\bar{y})^2}}", legenda: "r = 1 (Relação Perfeita), r = 0 (Sem Relação)." }
         ]
       },
       {
         id: 5,
-        titulo: "Fase 5: Missão no Canvas",
+        titulo: "Fase 5: Significância (P < 0.05)",
         conteudo: [
-          { tipo: "missao", valor: "Sua tarefa: \n1. Carregar a Base de Associação \n2. Validar a relação via Gráfico de Dispersão \n3. Testar a Normalidade (K-S ou Shapiro) \n4. Rodar a Correlação correta (Pearson ou Spearman) \n5. Checar a significância (P < 0.05)." }
+          { tipo: "texto", valor: "Um 'r' alto não vale nada se for fruto do acaso. O P-valor testa a probabilidade de estarmos enganados." },
+          { tipo: "alerta", valor: "🚨 REGRA: Só aceitamos a correlação se o P-valor for menor que 0.05. Isso significa que temos 95% de certeza que a relação é real." }
+        ]
+      },
+      {
+        id: 6,
+        titulo: "Missão no Canvas Lab",
+        conteudo: [
+          { tipo: "missao", valor: "Sua jornada: \n1. Carregar Base \n2. Ver Dispersão \n3. Testar Normalidade \n4. Calcular Pearson \n5. Validar P-valor." }
         ]
       }
     ]
   },
   'trilha-associacao-chi2': {
-    titulo: "Desafio 2: Desigualdade Digital (Qui-Quadrado)",
+    titulo: "Desafio: Desigualdade Digital (Qui-Quadrado)",
     fases: [
       {
         id: 1,
-        titulo: "Fase 1: O Questionamento categórico",
+        titulo: "Fase 1: O Questionamento PBL",
         conteudo: [
           { tipo: "missao", valor: "QUESTÃO: O acesso à internet depende do tipo de escola (Pública ou Privada)?" },
-          { tipo: "texto", valor: "Aqui não temos notas numéricas, mas CATEGORIAS (Sim/Não, Pública/Privada). Queremos saber se essas categorias são INDEPENDENTES ou se estão 'amarradas'." }
+          { tipo: "texto", valor: "Aqui não lidamos com notas (números), mas com Categorias (Sim/Não, Pública/Privada). Queremos saber se esses grupos estão 'amarrados' entre si." }
         ]
       },
       {
         id: 2,
-        titulo: "Fase 2: Tabela de Contingência",
+        titulo: "Fase 2: A Tabela de Contingência",
         conteudo: [
-          { tipo: "texto", valor: "Para analisar categorias, cruzamos as frequências em uma tabela. Quantos alunos de escola privada têm internet? E de pública?" },
-          { tipo: "dica", valor: "💡 O motor de Qui-Quadrado compara o que observamos na base com o que seria 'esperado' se não houvesse relação nenhuma. Grandes diferenças indicam associação!" }
+          { tipo: "texto", valor: "Para ver a associação, cruzamos os dados em uma tabela de dupla entrada." },
+          { tipo: "conceito", titulo: "Frequência Observada", valor: "É a contagem real: quantos alunos da pública NÃO têm internet? Se esse número for muito alto em relação ao esperado, há associação." }
         ]
       },
       {
         id: 3,
-        titulo: "Fase 3: Pressuposto Amostral (Qui-Quadrado vs Fisher)",
+        titulo: "Fase 3: O Teste Qui-Quadrado (χ²)",
         conteudo: [
-          { tipo: "texto", valor: "O Qui-Quadrado (χ²) tem uma regra de ouro: ele precisa de dados suficientes em cada célula da tabela." },
-          { tipo: "alerta", valor: "🚨 REGRA: Se alguma célula tiver 'Frequência Esperada' menor que 5, o Qui-Quadrado perde a precisão. Nesse caso, você DEVE usar o Teste Exato de Fisher." }
+          { tipo: "texto", valor: "O Qui-Quadrado mede a distância entre a realidade e o que seria esperado se não houvesse relação nenhuma." },
+          { tipo: "formula", valor: "\\chi^2 = \\sum \\frac{(O_i - E_i)^2}{E_i}", legenda: "O = Observado, E = Esperado." }
         ]
       },
       {
         id: 4,
-        titulo: "Fase 4: Intensidade (V de Cramér)",
+        titulo: "Fase 4: Intensidade (V de Cramer)",
         conteudo: [
-          { tipo: "texto", valor: "O Qui-Quadrado diz SE há associação, mas não diz se ela é FORTE. Para isso, usamos o V de Cramér." },
-          { tipo: "conceito", titulo: "Escala do V", valor: "0.1 (Fraco), 0.3 (Moderado), 0.5+ (Forte). Use isso para provar a magnitude da desigualdade digital." }
+          { tipo: "texto", valor: "Diferente da comparação de médias, o Qui-Quadrado não diz se a relação é forte. Para isso, usamos o V de Cramer." },
+          { tipo: "conceito", titulo: "Interpretando o V", valor: "0.1 (Fraco), 0.3 (Moderado), > 0.5 (Forte). No ENEM, você encontrará associações que são reais (P < 0.05) mas podem ter intensidades variadas." }
         ]
       },
       {
         id: 5,
-        titulo: "Fase 5: Missão no Canvas",
+        titulo: "Missão no Canvas Lab",
         conteudo: [
-          { tipo: "missao", valor: "Sua tarefa: \n1. Carregar a Base de Associação \n2. Gerar a Tabela de Contingência \n3. Validar se as células possuem N > 5 \n4. Executar Qui-Quadrado ou Fisher \n5. Calcular o V de Cramér para medir a força da relação." }
+          { tipo: "missao", valor: "Sua jornada: \n1. Carregar Base \n2. Rodar Qui-Quadrado \n3. Analisar Tabela Visual \n4. Calcular Magnitude com V de Cramer." }
+        ]
+      }
+    ]
+  },
+  'trilha-engenharia': {
+    titulo: "Engenharia de Atributos: O Poder da Transformação",
+    fases: [
+      {
+        id: 1,
+        titulo: "Fase 1: Além dos Dados Brutos",
+        conteudo: [
+          { tipo: "missao", valor: "QUESTÃO PBL: Como converter o desempenho individual em indicadores de impacto para o governo?" },
+          { tipo: "texto", valor: "Um Engenheiro de Dados não apenas limpa; ele cria inteligência. Muitas vezes, a resposta que buscamos não está nos dados originais, mas em uma combinação deles." },
+          { tipo: "conceito", titulo: "Engenharia de Atributos", valor: "É o processo de criar novas variáveis (colunas) para destacar padrões. Ex: Em vez de olhar apenas idade, olhar para 'Gerações'." }
+        ]
+      },
+      {
+        id: 2,
+        titulo: "Fase 2: O Peso da Verdade (Média Ponderada)",
+        conteudo: [
+          { tipo: "texto", valor: "No ENEM, cada universidade dá pesos diferentes. Se quisermos criar um 'Score de Humanas', a Redação deve valer mais que a Matemática." },
+          { tipo: "formula", valor: "Nota_{Final} = \\frac{(Mat \\times P_1) + (Red \\times P_2)}{P_1 + P_2}", legenda: "Onde P representa o peso de cada matéria." },
+          { tipo: "dica", valor: "💡 Use pesos maiores para a matéria que você considera mais decisiva na sua pesquisa." }
+        ]
+      },
+      {
+        id: 3,
+        titulo: "Fase 3: Agrupando para Entender (Binning)",
+        conteudo: [
+          { tipo: "texto", valor: "Analisar idades individuais (17, 18, 19...) pode ser confuso. É mais poderoso comparar grupos sociais como 'Jovens Estudantes' vs 'Adultos em Requalificação'." },
+          { tipo: "conceito", titulo: "Binning (Categorização)", valor: "Transforma variáveis contínuas (números) em categorias discretas (texto). Isso reduz o ruído e facilita a criação de gráficos de barras." }
+        ]
+      },
+      {
+        id: 4,
+        titulo: "Fase 4: Falando a Mesma Língua (Normalização)",
+        conteudo: [
+          { tipo: "texto", valor: "Como comparar uma prova de 0 a 1000 com uma de 0 a 10? A Normalização Min-Max 'esmaga' os dados para a escala 0 a 1." },
+          { tipo: "formula", valor: "X_{norm} = \\frac{x - min(X)}{max(x) - min(X)}", legenda: "Isso garante que nenhuma variável domine a outra por ter números maiores." },
+          { tipo: "alerta", valor: "🚨 A normalização é obrigatória se você for usar modelos de Inteligência Artificial futuramente!" }
+        ]
+      },
+      {
+        id: 5,
+        titulo: "Missão Final no Pipeline",
+        conteudo: [
+          { tipo: "missao", valor: "Sua jornada de Engenharia: \n1. Gere a NOTA_FINAL com pesos customizados \n2. Transforme a IDADE em FAIXA_ETARIA \n3. Crie uma versão NORMALIZADA das suas notas para futura IA." }
+        ]
+      }
+    ]
+  },
+  'trilha-amostragem': {
+    titulo: "Técnicas de Amostragem: O Atalho Científico",
+    fases: [
+      {
+        id: 1,
+        titulo: "Fase 1: O Labirinto do Big Data",
+        conteudo: [
+          { tipo: "missao", valor: "QUESTÃO PBL: Como pesquisar uma população de 4 milhões usando apenas 500 registros sem perder a verdade?" },
+          { tipo: "texto", valor: "Processar o ENEM inteiro trava computadores comuns. A solução é a AMOSTRAGEM: extrair uma parte que 'copia' o comportamento do todo." }
+        ]
+      },
+      {
+        id: 2,
+        titulo: "Fase 2: O Sorteio Puro (Amostra Aleatória)",
+        conteudo: [
+          { tipo: "texto", valor: "É como um sorteio. Pegamos 500 nomes ao acaso. É rápido, mas perigoso se grupos minoritários (como indígenas ou idosos) ficarem de fora por sorte." }
+        ]
+      },
+      {
+        id: 3,
+        titulo: "Fase 3: O Espelho da Realidade (Amostragem Estratificada)",
+        conteudo: [
+          { tipo: "texto", valor: "Se 80% do Brasil usa escola pública, sua amostra DEVE ter 80% de escola pública. A estratificação divide a base em 'fatias' antes de sortear." },
+          { tipo: "conceito", titulo: "Estratificação", valor: "Garante que a proporção das categorias na amostra seja idêntica à da população original." },
+          { tipo: "alerta", valor: "🚨 Sem estratificação, seus resultados podem sofrer VIÉS e levar a conclusões erradas sobre a sociedade." }
+        ]
+      },
+      {
+        id: 4,
+        titulo: "Missão Final no Pipeline",
+        conteudo: [
+          { tipo: "missao", valor: "Sua jornada de Amostragem: \n1. Extraia uma fatia aleatória da base de 50k \n2. Refine usando Estratificação por Tipo de Escola \n3. Prove que a amostra representa bem a base gigante." }
         ]
       }
     ]
   },
   'trilha-limpeza': {
-    titulo: "Limpeza e Curadoria de Dados",
+    titulo: "Curadoria e Higienização de Dados",
     fases: [
       {
         id: 1,
-        titulo: "Fase 1: O Caos dos Microdados",
+        titulo: "Fase 1: O Garimpo de Dados",
         conteudo: [
-          { tipo: "texto", valor: "O ENEM gera milhões de linhas. Muitas delas estão incompletas ou trazem candidatos que faltaram à prova. Analisar esses dados sem limpeza gera conclusões erradas." },
-          { tipo: "alerta", valor: "🚨 Candidatos com nota 'Zero' podem ser apenas faltantes, não necessariamente alunos que não sabem o conteúdo. Precisamos decidir o que fazer com eles!" }
+          { tipo: "missao", valor: "QUESTÃO PBL: Quanto do seu resultado final é 'ruído' causado por dados mal preenchidos?" },
+          { tipo: "texto", valor: "Bases de dados reais são sujas: têm nulos, erros de digitação e candidatos que nem foram fazer a prova. Analisar dados sujos é como construir uma casa na areia." }
         ]
       },
       {
         id: 2,
-        titulo: "Fase 2: Valores Nulos (Missing Data)",
+        titulo: "Fase 2: A Cirurgia dos Nulos",
         conteudo: [
-          { tipo: "texto", valor: "Em estatística, chamamos dados faltantes de 'NaN' ou 'Null'. No ENEM, isso acontece quando o aluno não preencheu o questionário socioeconômico." },
-          { tipo: "conceito", titulo: "Remover vs Imputar", valor: "Você pode apagar a linha (Remover) ou tentar preencher com a média (Imputar). Para o TCC, a remoção criteriosa é o caminho mais seguro." }
+          { tipo: "conceito", titulo: "Remover vs Imputação", valor: "Remover joga dados fora. Imputar preenche os vazios com a Média. Qual o impacto disso na sua confiança estatística?" },
+          { tipo: "dica", valor: "💡 Só remova se a informação faltante for o coração da sua pesquisa (como a Nota)." }
         ]
       },
       {
         id: 3,
-        titulo: "Fase 3: Missão de Curadoria",
+        titulo: "Fase 3: O Mistério das Datas e Moedas",
         conteudo: [
-          { tipo: "missao", valor: "Sua primeira tarefa de curadoria: \n1. Filtrar apenas candidatos presentes (TP_PRESENCA = 1) \n2. Remover linhas onde a Nota de Matemática é Nula \n3. Exportar a base limpa para o Módulo de Análise." }
+          { tipo: "texto", valor: "O computador não entende 'R$ 1.000' ou '12/05/23' como números. A Padronização converte esses textos para formatos que permitem cálculos matemáticos." }
+        ]
+      },
+      {
+        id: 4,
+        titulo: "Missão Final no Pipeline",
+        conteudo: [
+          { tipo: "missao", valor: "Sua jornada de Curadoria: \n1. Elimine os candidatos ausentes \n2. Limpe os nulos e duplicatas \n3. Padronize a Renda para formato numérico para permitir médias futuras." }
         ]
       }
     ]
