@@ -2,12 +2,36 @@ import React from 'react';
 import { MODULOS } from '../../constants/data';
 
 const ModuleSelection = ({ aoSelecionarModulo }) => {
+  const nomeUsuario = localStorage.getItem('tcc_user_nome') || 'Estudante';
+
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
   return (
     <div style={{ backgroundColor: '#f1f5f9', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <nav style={{ background: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+      <nav style={{ background: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
         <h2 style={{ margin: 0, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '24px' }}>📊</span> ENEM DataAnalytics
         </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <span style={{ color: '#64748b', fontSize: '14px' }}>Olá, <strong>{nomeUsuario}</strong></span>
+          <button 
+            onClick={handleLogout}
+            style={{ 
+              background: 'none', 
+              border: '1px solid #cbd5e1', 
+              padding: '5px 12px', 
+              borderRadius: '6px', 
+              cursor: 'pointer',
+              fontSize: '12px',
+              color: '#64748b'
+            }}
+          >
+            Sair
+          </button>
+        </div>
       </nav>
 
       <div style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white', padding: '80px 20px', textAlign: 'center' }}>

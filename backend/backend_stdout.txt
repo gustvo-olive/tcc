@@ -1,0 +1,109 @@
+[Analytics] Base Principal carregada: 563712 linhas.
+INFO:     127.0.0.1:55953 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56318 - "GET /api/usuario/dados-completos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56319 - "GET /api/usuario/dados-completos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56337 - "OPTIONS /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56337 - "POST /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56337 - "POST /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56337 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56346 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56337 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56346 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56478 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56478 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56488 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56488 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56490 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56490 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56494 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56494 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56497 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56497 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56500 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56500 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56507 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56507 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56580 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56580 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56597 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56597 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56943 - "OPTIONS /api/usuario/progresso HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56943 - "POST /api/usuario/progresso HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56943 - "POST /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56943 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56944 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56943 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56944 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56946 - "POST /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56946 - "POST /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56946 - "POST /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56946 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56959 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56959 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56946 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56980 - "POST /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56980 - "POST /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57048 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57048 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57064 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57064 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57130 - "POST /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57130 - "POST /api/usuario/badge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57131 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57132 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57130 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57131 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57132 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57132 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57155 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57155 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57163 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57163 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57164 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57164 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57167 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57167 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57168 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57168 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57169 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57169 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57470 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57470 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57472 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57472 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57473 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57473 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57474 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57474 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57479 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57479 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57480 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57480 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57481 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57481 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57482 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57482 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57489 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57489 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57490 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57490 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57493 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57493 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57494 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57494 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57495 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57495 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57497 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57497 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57498 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57498 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57500 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57500 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57510 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57510 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57511 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57511 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57514 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57514 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:57515 - "OPTIONS /api/processar-fluxo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57515 - "POST /api/processar-fluxo HTTP/1.1" 500 Internal Server Error

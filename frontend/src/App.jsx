@@ -5,6 +5,7 @@ import { buscarDadosUsuario } from './services/api';
 import BadgeNotification from './components/ui/BadgeNotification';
 
 // Páginas
+import Login from './pages/Login/Login';
 import ModuleSelection from './pages/ModuleSelection/ModuleSelection';
 import Dashboard from './pages/Dashboard/Dashboard';
 import FlowDesigner from './pages/Canvas/FlowDesigner';
@@ -12,32 +13,49 @@ import Theory from './pages/Theory/Theory';
 import CleaningPipeline from './pages/Cleaning/CleaningPipeline';
 
 export default function App() {
+  const [autenticado, setAutenticado] = useState(!!localStorage.getItem('tcc_user_id'));
   const [paginaAtual, setPaginaAtual] = useState('selecao-modulo');
   const [moduloSelecionado, setModuloSelecionado] = useState(null);
   const [licaoAtual, setLicaoAtual] = useState(null);
 
   // Sincronização Inicial com o Backend
   useEffect(() => {
-    async function sync() {
-      const dados = await buscarDadosUsuario();
-      if (dados) {
-        // Sincroniza Badges
-        if (dados.badges) {
-          localStorage.setItem('tcc_badges_unlocked', JSON.stringify(dados.badges));
-        }
-        // Sincroniza Progressos
-        if (dados.progressos) {
-          Object.entries(dados.progressos).forEach(([id, info]) => {
-            localStorage.setItem(`progresso-${id}`, info.fase.toString());
-            // Se tiver nota, podemos salvar também se houver uso futuro
-            localStorage.setItem(`nota-${id}`, info.nota.toString());
-          });
-        }
-        console.log("🔄 Sincronização com SQLite concluída!");
-      }
+    if (autenticado) {
+      syncDados();
     }
-    sync();
-  }, []);
+  }, [autenticado]);
+
+  async function syncDados() {
+    const dados = await buscarDadosUsuario();
+    if (dados) {
+      // Sincroniza Badges
+      if (dados.badges) {
+        localStorage.setItem('tcc_badges_unlocked', JSON.stringify(dados.badges));
+      }
+      // Sincroniza Progressos
+      if (dados.progressos) {
+        Object.entries(dados.progressos).forEach(([id, info]) => {
+          localStorage.setItem(`progresso-${id}`, info.fase.toString());
+          localStorage.setItem(`nota-${id}`, info.nota.toString());
+        });
+      }
+      console.log("🔄 Sincronização com SQLite concluída!");
+    }
+  }
+
+  const handleLoginSucesso = () => {
+    setAutenticado(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setAutenticado(false);
+    setPaginaAtual('selecao-modulo');
+  };
+
+  if (!autenticado) {
+    return <Login onLoginSucesso={handleLoginSucesso} />;
+  }
 
   // 1. Navegação: Home -> Dashboard do Módulo
   const handleSelecionarModulo = (moduloId) => {

@@ -3,10 +3,11 @@ import os
 import traceback
 from typing import List, Dict, Any
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
 
 from database import engine, SessionLocal, Base
 import models
@@ -40,18 +41,13 @@ def get_db():
     try: yield db
     finally: db.close()
 
-# Inicialização de Dados Básicos
-@app.on_event("startup")
-def startup_event():
-    db = SessionLocal()
-    try:
-        if not db.query(models.Usuario).first():
-            user = models.Usuario(nome="Estudante Padrão")
-            db.add(user)
-            db.commit()
-            print("👤 Usuário padrão criado!")
-    finally:
-        db.close()
+# Schemas Pydantic
+class UsuarioBase(BaseModel):
+    email: str
+    senha: str
+
+class UsuarioRegistro(UsuarioBase):
+    nome: str
 
 class GrafoPayload(BaseModel):
     nodes: List[Dict[str, Any]]
@@ -65,9 +61,29 @@ class ProgressoFasePayload(BaseModel):
 class BadgePayload(BaseModel):
     badge_id: str
 
+# Endpoints de Autenticação
+@app.post("/api/registrar")
+def registrar(payload: UsuarioRegistro, db: Session = Depends(get_db)):
+    if db.query(models.Usuario).filter_by(email=payload.email).first():
+        raise HTTPException(status_code=400, detail="Email já cadastrado")
+    
+    novo_usuario = models.Usuario(nome=payload.nome, email=payload.email, senha=payload.senha)
+    db.add(novo_usuario)
+    db.commit()
+    db.refresh(novo_usuario)
+    return {"status": "sucesso", "usuario_id": novo_usuario.id, "nome": novo_usuario.nome}
+
+@app.post("/api/login")
+def login(payload: UsuarioBase, db: Session = Depends(get_db)):
+    user = db.query(models.Usuario).filter_by(email=payload.email, senha=payload.senha).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Credenciais inválidas")
+    return {"status": "sucesso", "usuario_id": user.id, "nome": user.nome}
+
 @app.get("/api/usuario/dados-completos")
-def get_dados_usuario(db: Session = Depends(get_db)):
-    user = db.query(models.Usuario).first()
+def get_dados_usuario(x_user_id: Optional[int] = Header(None), db: Session = Depends(get_db)):
+    if not x_user_id: raise HTTPException(status_code=401, detail="Não autenticado")
+    user = db.query(models.Usuario).filter_by(id=x_user_id).first()
     if not user: raise HTTPException(status_code=404, detail="Usuário não encontrado")
     
     progressos = {p.licao_id: {"fase": p.fase_atual, "nota": p.nota_maxima} for p in user.progressos}
@@ -80,8 +96,11 @@ def get_dados_usuario(db: Session = Depends(get_db)):
     }
 
 @app.post("/api/usuario/progresso")
-def atualizar_progresso(payload: ProgressoFasePayload, db: Session = Depends(get_db)):
-    user = db.query(models.Usuario).first()
+def atualizar_progresso(payload: ProgressoFasePayload, x_user_id: Optional[int] = Header(None), db: Session = Depends(get_db)):
+    if not x_user_id: raise HTTPException(status_code=401, detail="Não autenticado")
+    user = db.query(models.Usuario).filter_by(id=x_user_id).first()
+    if not user: raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
     prog = db.query(models.ProgressoTrilha).filter_by(usuario_id=user.id, licao_id=payload.licao_id).first()
     
     if not prog:
@@ -94,8 +113,11 @@ def atualizar_progresso(payload: ProgressoFasePayload, db: Session = Depends(get
     return {"status": "sucesso", "fase_atual": prog.fase_atual}
 
 @app.post("/api/usuario/badge")
-def destravar_badge(payload: BadgePayload, db: Session = Depends(get_db)):
-    user = db.query(models.Usuario).first()
+def destravar_badge(payload: BadgePayload, x_user_id: Optional[int] = Header(None), db: Session = Depends(get_db)):
+    if not x_user_id: raise HTTPException(status_code=401, detail="Não autenticado")
+    user = db.query(models.Usuario).filter_by(id=x_user_id).first()
+    if not user: raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
     if not db.query(models.BadgeDesbloqueado).filter_by(usuario_id=user.id, badge_id=payload.badge_id).first():
         novo_badge = models.BadgeDesbloqueado(usuario_id=user.id, badge_id=payload.badge_id)
         db.add(novo_badge)
@@ -124,10 +146,11 @@ def clean_for_json(obj):
     return obj
 
 @app.post("/api/processar-fluxo")
-def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
+def processar_fluxo(payload: GrafoPayload, x_user_id: Optional[int] = Header(None), db: Session = Depends(get_db)):
     try:
         print(f"\n🚀 [API] Processando: {payload.licao_id}")
-        user = db.query(models.Usuario).first()
+        if not x_user_id: raise HTTPException(status_code=401, detail="Não autenticado")
+        user = db.query(models.Usuario).filter_by(id=x_user_id).first()
 
         # 1. Salva o histórico
         novo_grafo = models.GrafoSalvo(
@@ -142,7 +165,6 @@ def processar_fluxo(payload: GrafoPayload, db: Session = Depends(get_db)):
         if payload.licao_id == "trilha-limpeza":
             res = analytics.processar_limpeza(payload.nodes)
         elif payload.licao_id == "trilha-engenharia":
-            # Usamos a mesma lógica de limpeza, mas o Analizador decide a base pelo ID da trilha (será implementado no analytics.py)
             res = analytics.processar_limpeza(payload.nodes, base_type="feat")
         elif payload.licao_id == "trilha-amostragem":
             res = analytics.processar_limpeza(payload.nodes, base_type="sampling")
