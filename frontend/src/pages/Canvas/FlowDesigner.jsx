@@ -744,7 +744,12 @@ except Exception as e:
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ width: '320px', background: '#f8fafc', padding: '15px', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', overflowX: 'visible' }}>
-        <button onClick={voltarAoMenu} style={{ padding: '10px', background: '#e2e8f0', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px' }}>⬅ Voltar</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <button onClick={voltarAoMenu} style={{ padding: '8px 12px', background: '#e2e8f0', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', color: '#475569', fontSize: '13px' }}>⬅ Voltar</button>
+          <div style={{ fontWeight: 'bold', color: '#64748b', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            🎓 {localStorage.getItem('tcc_user_nome') || 'Estudante'}
+          </div>
+        </div>
         
         <h4 style={{ margin: '0', color: '#475569', fontSize: '12px' }}>1. EXPLORAÇÃO (EDA)</h4>
         <Tooltip 

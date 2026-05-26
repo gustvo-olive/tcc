@@ -43,6 +43,8 @@ const Dashboard = ({ moduloId, acessarLicao, voltarParaModulos }) => {
     ? Object.values(progreessos).reduce((a, b) => a + b, 0) / trilhas.length 
     : 0;
 
+  const nomeUsuario = localStorage.getItem('tcc_user_nome') || 'Estudante';
+
   return (
     <div style={{ backgroundColor: '#f1f5f9', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
       <nav style={{ background: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
@@ -58,7 +60,7 @@ const Dashboard = ({ moduloId, acessarLicao, voltarParaModulos }) => {
           </h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', color: '#475569' }}>
-          🎓 Aluno <span style={{ fontSize: '12px' }}>▼</span>
+          🎓 {nomeUsuario} <span style={{ fontSize: '12px' }}>▼</span>
         </div>
       </nav>
 

@@ -103,12 +103,19 @@ const Theory = ({ licaoId, voltarAoDashboard, irParaCanvas }) => {
     );
   }
 
+  const nomeUsuario = localStorage.getItem('tcc_user_nome') || 'Estudante';
+
   return (
     <div style={{ backgroundColor: '#f1f5f9', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
       <nav style={{ background: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 10 }}>
         <button onClick={voltarAoDashboard} style={{ background: '#f1f5f9', border: 'none', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>← Voltar</button>
         <h2 style={{ margin: 0, fontSize: '18px', color: '#0f172a' }}>{trilha?.icone} {trilha?.titulo}</h2>
-        <div style={{ color: '#64748b', fontWeight: 'bold' }}>{conteudoDidatico ? `Fase ${faseAtualIdx + 1} de ${totalFases}` : 'Em breve'}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ color: '#64748b', fontWeight: 'bold', fontSize: '14px' }}>{conteudoDidatico ? `Fase ${faseAtualIdx + 1} de ${totalFases}` : 'Em breve'}</div>
+          <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '20px', fontWeight: 'bold', color: '#475569', fontSize: '14px' }}>
+            🎓 {nomeUsuario}
+          </div>
+        </div>
       </nav>
 
       {conteudoDidatico && totalFases > 0 && (

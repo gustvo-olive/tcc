@@ -157,7 +157,7 @@ class AnalizadorEstatistico:
             # 10. Amostragem Aleatória (id: 'amostra_simples')
             elif node_id == 'amostra_simples':
                 n_sample = min(c.get('n', 500), len(df))
-                df = df.sample(n=n_sample, random_state=42)
+                df = df.sample(n=n_sample)
 
             # 11. Amostragem Estratificada (id: 'amostra_estratificada')
             elif node_id == 'amostra_estratificada':
