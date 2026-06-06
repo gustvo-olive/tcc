@@ -35,7 +35,7 @@ export default function Login({ onLoginSucesso }) {
       <div className="login-box">
         <header className="login-header">
           <div className="logo-placeholder">📊</div>
-          <h1>ENEM DataAnalytics</h1>
+          <h1>StatFlow</h1>
           <p>{isLogin ? 'Bem-vindo de volta!' : 'Crie sua conta para começar'}</p>
         </header>
 

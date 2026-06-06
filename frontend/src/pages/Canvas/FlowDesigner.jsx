@@ -641,7 +641,7 @@ function FlowDesigner({ licaoId, voltarAoMenu }) {
     const fileName = isAssoc ? 'base_associacao_didatica.csv' : (isLimpeza ? 'mini_enem_sujo.csv' : 'enem_ma_participantes_2019_2023.csv');
 
     let code = `\"\"\"
-Script gerado pelo ENEM DataAnalytics - CanvasLab
+Script gerado pelo StatFlow - CanvasLab
 Data: ${new Date().toLocaleString()}
 Trilha: ${licaoId}
 \"\"\"

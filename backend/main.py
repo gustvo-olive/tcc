@@ -25,7 +25,7 @@ analytics = AnalizadorEstatistico(DATA_PATH, MINI_ENEM_PATH, ASSOC_PATH)
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="ENEM DataAnalytics API")
+app = FastAPI(title="StatFlow API")
 
 # Configuração de CORS robusta
 app.add_middleware(
