@@ -80,7 +80,7 @@ class AnalizadorEstatistico:
                 cols_to_pad = c.get('colunas', [])
                 formato_renda = c.get('formato_renda', 'moeda')
                 if not cols_to_pad:
-                    cols_to_pad = [col for col in ['DATA_INSCRICAO', 'RENDA_BRUTA'] if col in df.columns]
+                    cols_to_pad = [col for col in ['DATA_INSCRICAO', 'RENDA_BRUTA', 'LINGUA'] if col in df.columns]
 
                 for col in cols_to_pad:
                     if 'DATA' in col.upper():
@@ -108,6 +108,17 @@ class AnalizadorEstatistico:
                             df[col] = vals_float
                         elif formato_renda == 'inteiro':
                             df[col] = vals_float.apply(lambda x: int(x) if pd.notnull(x) else None)
+                    
+                    elif 'LINGUA' in col.upper() or 'IDIOMA' in col.upper():
+                        def clean_lang(val):
+                            if pd.isnull(val): return val
+                            v = str(val).lower().strip()
+                            if 'ing' in v or 'ingl' in v:
+                                return 'INGLÊS'
+                            elif 'esp' in v:
+                                return 'ESPANHOL'
+                            return str(val).upper()
+                        df[col] = df[col].apply(clean_lang)
 
             # 6. Imputação de Dados (id: 'imputar')
             elif node_id == 'imputar':

@@ -36,8 +36,9 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
     return [
       { id: 'nulos', label: '🧹 Remover Nulos', color: '#0ea5e9', desc: 'Elimina NaN.', default_config: { colunas: [] } },
       { id: 'ausentes', label: '🚫 Filtrar Ausentes', color: '#3b82f6', desc: 'Remove SITUACAO != OK.' },
+      { id: 'duplicatas', label: '👥 Remover Duplicatas', color: '#10b981', desc: 'Remove repetidos.' },
       { id: 'outliers', label: '🎯 Limpar Outliers', color: '#6366f1', desc: 'Remove extremos.', default_config: { idade_max: 120, nota_max: 1000 } },
-      { id: 'padronizar', label: '⚙️ Padronizar Dados', color: '#a855f7', desc: 'Datas e Moedas.', default_config: { colunas: [], formato_renda: 'moeda' } },
+      { id: 'padronizar', label: '⚙️ Padronizar Dados', color: '#a855f7', desc: 'Datas, Moedas e Idioma.', default_config: { colunas: ['DATA_INSCRICAO', 'RENDA_BRUTA', 'LINGUA'], formato_renda: 'moeda' } },
       { id: 'imputar', label: '🧪 Imputar Dados', color: '#ec4899', desc: 'Preenche buracos.', default_config: { coluna: '', metodo: 'mediana' } }
     ];
   };
@@ -46,7 +47,7 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
 
   const addStep = (block) => {
     if (steps.find(s => s.id === block.id)) return;
-    const isReady = !block.default_config;
+    const isReady = block.id !== 'imputar' && block.id !== 'nulos';
     setSteps([...steps, { ...block, active: true, ready: isReady, config: JSON.parse(JSON.stringify(block.default_config || {})) }]);
   };
 
@@ -55,7 +56,32 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
     setConfigNode(null);
   };
 
-  const finalizarPipeline = () => { setIsFinished(true); unlockBadge('completista'); };
+  const handleExportCSV = () => {
+    if (!preview || preview.length === 0) return;
+    const headers = Object.keys(preview[0]);
+    const csvRows = [headers.join(',')];
+    for (const row of preview) {
+      const values = headers.map(header => {
+        const val = row[header];
+        const escaped = ('' + (val !== null && val !== undefined ? val : '')).replace(/"/g, '\\"');
+        return `"${escaped}"`;
+      });
+      csvRows.push(values.join(','));
+    }
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `base_dados_limpa_${licaoId}.csv`;
+    link.click();
+  };
+
+  const finalizarPipeline = () => { 
+    setIsFinished(true); 
+    unlockBadge('completista'); 
+    handleExportCSV();
+  };
 
   useEffect(() => {
     const runPipeline = async () => {
@@ -271,6 +297,26 @@ const CleaningPipeline = ({ licaoId, voltarAoMenu }) => {
                         ))}
                     </div>
                     <button onClick={() => handleUpdateConfig(configNode.id, configNode.config)} style={{ background: '#0ea5e9', color: 'white', padding: '10px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Salvar</button>
+                </div>
+            )}
+            {configNode?.id === 'imputar' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <p style={{ fontSize: '13px', color: '#64748b' }}>Preencher dados faltantes (nulos) com uma métrica de tendência central.</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <label style={{ fontSize: '11px', fontWeight: 'bold' }}>COLUNA ALVO</label>
+                        <select value={configNode.config.coluna} onChange={(e) => setConfigNode({...configNode, config: {...configNode.config, coluna: e.target.value}})} style={{ width: '100%', padding: '8px', border: '1px solid #e2e8f0', background: 'white' }}>
+                            <option value="">Selecione a coluna...</option>
+                            {columns.map(col => <option key={col} value={col}>{col}</option>)}
+                        </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <label style={{ fontSize: '11px', fontWeight: 'bold' }}>MÉTODO DE IMPUTAÇÃO</label>
+                        <select value={configNode.config.metodo} onChange={(e) => setConfigNode({...configNode, config: {...configNode.config, metodo: e.target.value}})} style={{ width: '100%', padding: '8px', border: '1px solid #e2e8f0', background: 'white' }}>
+                            <option value="mediana">Mediana</option>
+                            <option value="media">Média</option>
+                        </select>
+                    </div>
+                    <button onClick={() => handleUpdateConfig(configNode.id, configNode.config)} disabled={!configNode.config.coluna} style={{ background: '#ec4899', color: 'white', padding: '10px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', opacity: configNode.config.coluna ? 1 : 0.5 }}>Salvar</button>
                 </div>
             )}
         </Modal>

@@ -331,7 +331,7 @@ export const TRILHAS_CONTENT = {
     ]
   },
   'trilha-limpeza': {
-    titulo: "Curadoria e Higienização de Dados",
+    titulo: "Limpeza de Microdados",
     fases: [
       {
         id: 1,
