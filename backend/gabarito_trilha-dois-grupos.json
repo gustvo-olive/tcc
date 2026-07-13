@@ -2,124 +2,501 @@
   "nodes": [
     {
       "id": "pergunta-1",
-      "position": { "x": 250, "y": 30 },
-      "data": { "label": "DESAFIO: Existe diferença significativa entre a nota de REDAÇÃO de Homens e Mulheres no ENEM 2023?" },
-      "type": "input"
+      "position": {
+        "x": 250,
+        "y": 30
+      },
+      "data": {
+        "label": "DESAFIO: Existe diferença significativa entre a nota de REDAÇÃO de Homens e Mulheres no ENEM 2023?"
+      },
+      "type": "input",
+      "draggable": false,
+      "style": {
+        "background": "#000000",
+        "color": "#ffffff",
+        "fontWeight": "bold",
+        "width": 450,
+        "borderRadius": "8px",
+        "padding": "15px",
+        "textAlign": "center",
+        "fontSize": "14px",
+        "border": "3px solid #6366f1"
+      },
+      "measured": {
+        "width": 450,
+        "height": 78
+      }
     },
     {
-      "id": "node-base",
-      "position": { "x": 375, "y": 150 },
-      "data": { "label": "📊 Base de Dados", "color": "#2563eb", "icon": "📊" },
-      "type": "tool"
+      "id": "node-1783951715194",
+      "position": {
+        "x": 383.97349381916604,
+        "y": 147.0808308231057
+      },
+      "data": {
+        "label": "📊 Base de Dados",
+        "color": "#2563eb",
+        "icon": "📊"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 183,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "node-boxplot",
-      "position": { "x": 380, "y": 250 },
-      "data": { "label": "📊 Boxplot", "color": "#0891b2", "icon": "📊" },
-      "type": "tool"
+      "id": "node-1783951716522",
+      "position": {
+        "x": 399.6434039584963,
+        "y": 286.3689209504856
+      },
+      "data": {
+        "label": "👁️ Ver Tabela",
+        "color": "#0891b2",
+        "icon": "👁️"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 159,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "cond-n",
-      "position": { "x": 400, "y": 350 },
-      "data": { "label": "N > 5000?", "color": "#eab308", "icon": "⚙️" },
-      "type": "condition"
+      "id": "node-1783951720618",
+      "position": {
+        "x": 396.05475997429056,
+        "y": 416.0719104947827
+      },
+      "data": {
+        "label": "🧮 Contar N",
+        "color": "#0891b2",
+        "icon": "🔢"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 154,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "node-ks",
-      "position": { "x": 550, "y": 450 },
-      "data": { "label": "⚖️ Kolmogorov-Smirnov", "color": "#8b5cf6", "icon": "📊" },
-      "type": "tool"
+      "id": "node-1783951727674",
+      "position": {
+        "x": 367.3265913855185,
+        "y": 562.3244051285316
+      },
+      "data": {
+        "label": "📉 Boxplot de Gênero",
+        "color": "#0891b2",
+        "icon": "📈"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 207,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "node-shapiro",
-      "position": { "x": 200, "y": 450 },
-      "data": { "label": "⚖️ Shapiro-Wilk", "color": "#a855f7", "icon": "📈" },
-      "type": "tool"
+      "id": "node-1783951743563",
+      "position": {
+        "x": 423.38730352759245,
+        "y": 694.1790061426633
+      },
+      "data": {
+        "label": "N > 5000?",
+        "color": "#eab308",
+        "icon": "⚙️"
+      },
+      "type": "condition",
+      "measured": {
+        "width": 100,
+        "height": 100
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "node-levene",
-      "position": { "x": 380, "y": 550 },
-      "data": { "label": "⚖️ Teste de Levene", "color": "#f97316", "icon": "⚖️" },
-      "type": "tool"
+      "id": "node-1783951746795",
+      "position": {
+        "x": 559.8122744303703,
+        "y": 777.9149994095189
+      },
+      "data": {
+        "label": "⚖️ Kolmogorov-Smirnov",
+        "color": "#8b5cf6",
+        "icon": "📊"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 223,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "cond-normal",
-      "position": { "x": 400, "y": 650 },
-      "data": { "label": "É Normal?", "color": "#eab308", "icon": "⚙️" },
-      "type": "condition"
+      "id": "node-1783951747219",
+      "position": {
+        "x": 231.15255043452925,
+        "y": 788.2833735264269
+      },
+      "data": {
+        "label": "⚖️ Shapiro-Wilk",
+        "color": "#a855f7",
+        "icon": "📈"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 175,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "node-testet",
-      "position": { "x": 600, "y": 750 },
-      "data": { "label": "🧮 Teste T", "color": "#ef4444", "icon": "🧮" },
-      "type": "tool"
+      "id": "node-1783951760707",
+      "position": {
+        "x": 387.50432632335463,
+        "y": 928.1425898906888
+      },
+      "data": {
+        "label": "⚖️ Teste de Levene",
+        "color": "#f97316",
+        "icon": "⚖️"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 190,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "node-mann",
-      "position": { "x": 200, "y": 750 },
-      "data": { "label": "🧮 Mann-Whitney", "color": "#16a34a", "icon": "📉" },
-      "type": "tool"
+      "id": "node-1783951775331",
+      "position": {
+        "x": 433.5550103285144,
+        "y": 1093.8695964585322
+      },
+      "data": {
+        "label": "É Normal?",
+        "color": "#eab308",
+        "icon": "⚙️"
+      },
+      "type": "condition",
+      "measured": {
+        "width": 100,
+        "height": 100
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "cond-p-testet",
-      "position": { "x": 620, "y": 850 },
-      "data": { "label": "P < 0.05?", "color": "#eab308", "icon": "⚙️" },
-      "type": "condition"
+      "id": "node-1783951783628",
+      "position": {
+        "x": 580.4231390864151,
+        "y": 1211.1355569198884
+      },
+      "data": {
+        "label": "🧮 Teste T",
+        "color": "#ef4444",
+        "icon": "⚖️"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 154,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "cond-p-mann",
-      "position": { "x": 220, "y": 850 },
-      "data": { "label": "P < 0.05?", "color": "#eab308", "icon": "⚙️" },
-      "type": "condition"
+      "id": "node-1783951783988",
+      "position": {
+        "x": 222.00186635629802,
+        "y": 1194.6407154466892
+      },
+      "data": {
+        "label": "🧮 Mann-Whitney",
+        "color": "#16a34a",
+        "icon": "📉"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 186,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "node-cohen-t",
-      "position": { "x": 750, "y": 950 },
-      "data": { "label": "📏 d de Cohen", "color": "#0f766e", "icon": "📏" },
-      "type": "tool"
+      "id": "node-1783951807357",
+      "position": {
+        "x": 434.2233767099426,
+        "y": 1371.6962835120291
+      },
+      "data": {
+        "label": "P < 0.05?",
+        "color": "#eab308",
+        "icon": "⚙️"
+      },
+      "type": "condition",
+      "measured": {
+        "width": 100,
+        "height": 100
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "node-cohen-m",
-      "position": { "x": 300, "y": 950 },
-      "data": { "label": "📏 d de Cohen", "color": "#0f766e", "icon": "📏" },
-      "type": "tool"
+      "id": "node-1783951817597",
+      "position": {
+        "x": 581.0415929069411,
+        "y": 1476.1393710948314
+      },
+      "data": {
+        "label": "📏 d de Cohen",
+        "color": "#0f766e",
+        "icon": "📏"
+      },
+      "type": "tool",
+      "measured": {
+        "width": 165,
+        "height": 95
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "end-h0",
-      "position": { "x": 400, "y": 1050 },
-      "data": { "label": "🛑 Aceitar H0", "color": "#94a3b8", "icon": "⚙️" },
-      "type": "end"
+      "id": "node-1783951824197",
+      "position": {
+        "x": 289.002005619168,
+        "y": 1519.7683207682626
+      },
+      "data": {
+        "label": "🛑 Aceitar H0",
+        "color": "#94a3b8",
+        "icon": "⚙️"
+      },
+      "type": "end",
+      "measured": {
+        "width": 130,
+        "height": 44
+      },
+      "selected": false,
+      "dragging": false
     },
     {
-      "id": "end-sucesso",
-      "position": { "x": 550, "y": 1150 },
-      "data": { "label": "🏆 Sucesso", "color": "#10b981", "icon": "⚙️" },
-      "type": "end"
+      "id": "node-1783951829197",
+      "position": {
+        "x": 602.4896957708474,
+        "y": 1645.5715601250552
+      },
+      "data": {
+        "label": "🏆 Sucesso",
+        "color": "#10b981",
+        "icon": "⚙️"
+      },
+      "type": "end",
+      "measured": {
+        "width": 120,
+        "height": 44
+      },
+      "selected": true,
+      "dragging": false
     }
   ],
   "edges": [
-    { "id": "e1", "source": "pergunta-1", "target": "node-base", "animated": true },
-    { "id": "e2", "source": "node-base", "target": "node-boxplot", "animated": true },
-    { "id": "e3", "source": "node-boxplot", "target": "cond-n", "animated": true },
-    { "id": "e4", "source": "cond-n", "sourceHandle": "sim", "target": "node-ks", "animated": true },
-    { "id": "e5", "source": "cond-n", "sourceHandle": "nao", "target": "node-shapiro", "animated": true },
-    { "id": "e6", "source": "node-ks", "target": "node-levene", "animated": true },
-    { "id": "e7", "source": "node-shapiro", "target": "node-levene", "animated": true },
-    { "id": "e8", "source": "node-levene", "target": "cond-normal", "animated": true },
-    { "id": "e9", "source": "cond-normal", "sourceHandle": "sim", "target": "node-testet", "animated": true },
-    { "id": "e10", "source": "cond-normal", "sourceHandle": "nao", "target": "node-mann", "animated": true },
-    { "id": "e11", "source": "node-testet", "target": "cond-p-testet", "animated": true },
-    { "id": "e12", "source": "node-mann", "target": "cond-p-mann", "animated": true },
-    { "id": "e13", "source": "cond-p-testet", "sourceHandle": "sim", "target": "node-cohen-t", "animated": true },
-    { "id": "e14", "source": "cond-p-testet", "sourceHandle": "nao", "target": "end-h0", "animated": true },
-    { "id": "e15", "source": "cond-p-mann", "sourceHandle": "sim", "target": "node-cohen-m", "animated": true },
-    { "id": "e16", "source": "cond-p-mann", "sourceHandle": "nao", "target": "end-h0", "animated": true },
-    { "id": "e17", "source": "node-cohen-t", "target": "end-sucesso", "animated": true },
-    { "id": "e18", "source": "node-cohen-m", "target": "end-sucesso", "animated": true }
+    {
+      "source": "pergunta-1",
+      "target": "node-1783951715194",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__pergunta-1-node-1783951715194"
+    },
+    {
+      "source": "node-1783951715194",
+      "target": "node-1783951716522",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951715194-node-1783951716522"
+    },
+    {
+      "source": "node-1783951716522",
+      "target": "node-1783951720618",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951716522-node-1783951720618"
+    },
+    {
+      "source": "node-1783951720618",
+      "target": "node-1783951727674",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951720618-node-1783951727674"
+    },
+    {
+      "source": "node-1783951727674",
+      "target": "node-1783951743563",
+      "targetHandle": "top",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951727674-node-1783951743563top"
+    },
+    {
+      "source": "node-1783951743563",
+      "sourceHandle": "nao",
+      "target": "node-1783951747219",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951743563nao-node-1783951747219"
+    },
+    {
+      "source": "node-1783951743563",
+      "sourceHandle": "sim",
+      "target": "node-1783951746795",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951743563sim-node-1783951746795"
+    },
+    {
+      "source": "node-1783951747219",
+      "target": "node-1783951760707",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951747219-node-1783951760707"
+    },
+    {
+      "source": "node-1783951746795",
+      "target": "node-1783951760707",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951746795-node-1783951760707"
+    },
+    {
+      "source": "node-1783951760707",
+      "target": "node-1783951775331",
+      "targetHandle": "top",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951760707-node-1783951775331top"
+    },
+    {
+      "source": "node-1783951775331",
+      "sourceHandle": "sim",
+      "target": "node-1783951783628",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951775331sim-node-1783951783628"
+    },
+    {
+      "source": "node-1783951775331",
+      "sourceHandle": "nao",
+      "target": "node-1783951783988",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951775331nao-node-1783951783988"
+    },
+    {
+      "source": "node-1783951783988",
+      "target": "node-1783951807357",
+      "targetHandle": "top",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951783988-node-1783951807357top"
+    },
+    {
+      "source": "node-1783951783628",
+      "target": "node-1783951807357",
+      "targetHandle": "top",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951783628-node-1783951807357top"
+    },
+    {
+      "source": "node-1783951807357",
+      "sourceHandle": "sim",
+      "target": "node-1783951817597",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951807357sim-node-1783951817597"
+    },
+    {
+      "source": "node-1783951807357",
+      "sourceHandle": "nao",
+      "target": "node-1783951824197",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951807357nao-node-1783951824197"
+    },
+    {
+      "source": "node-1783951817597",
+      "target": "node-1783951829197",
+      "animated": true,
+      "style": {
+        "strokeWidth": 2,
+        "stroke": "#64748b"
+      },
+      "id": "xy-edge__node-1783951817597-node-1783951829197"
+    }
   ],
   "metadata": {
     "licaoId": "trilha-dois-grupos",
-    "criadoEm": "2026-04-14T11:00:00.000Z",
-    "autor": "Gemini CLI"
+    "criadoEm": "2026-07-13T14:13:24.658Z"
   }
 }
