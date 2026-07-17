@@ -1,0 +1,13 @@
+# Arquivos e pastas do TCC ignorados
+resumos/
+erro.md
+GEMINI.md
+trabalho antigo/
+frontend/Book_EstatBas-Morettin-Bussab.pdf
+
+# Arquivos de compilação Python
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
