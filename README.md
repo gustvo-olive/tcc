@@ -21,7 +21,7 @@ O principal objetivo da plataforma é reduzir a sobrecarga cognitiva (teoria CLT
     *   **CanvasLab (Módulo 2)**: Canvas interativo baseado em grafos para estruturação de testes estatísticos de hipóteses e análises de associação.
 *   **Juiz Estatístico**: Algoritmo no backend baseado em Busca em Profundidade (DFS) que analisa a topologia do fluxo desenhado pelo estudante, garantindo o rigor metodológico (ex: bloqueando testes paramétricos caso pressupostos obrigatórios como normalidade e homocedasticidade não tenham sido validados previamente) e emitindo feedback corretivo detalhado em tempo real.
 *   **Gamificação**: Engajamento sustentado via atribuição de notas de qualidade de grafo (Score), pontos de experiência (XP), patentes acadêmicas progressivas e desbloqueio de insígnias (*badges*) persistidas em banco de dados SQLite local.
-*   **Bases de Dados Didatizadas baseadas no ENEM**: Utiliza dados sintéticos didáticos inspirados nos microdados reais do ENEM/INEP para simular problemas práticos do cenário educacional brasileiro.
+*   **Bases de Dados Didatizadas baseadas no ENEM**: Utiliza dados didáticos inspirados nos microdados reais do ENEM/INEP para simular problemas práticos do cenário educacional brasileiro.
 
 ---
 
